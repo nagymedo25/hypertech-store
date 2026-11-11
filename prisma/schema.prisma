@@ -1,0 +1,191 @@
+// ============================================================
+// HYPER TECH — Production Schema (Neon PostgreSQL)
+// ============================================================
+// Mirrors the Phase-01 domain models 1:1 so the frontend needs
+// zero type changes. JSON columns hold spec rows / image arrays /
+// order lines. Operational tables are resettable by the backup
+// center; AdminUser / BackupRecord / AuditLog survive resets.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/* ------------------------- Security ------------------------- */
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  passwordHash String
+  role         String    @default("admin")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+}
+
+/* ------------------------- Catalog ------------------------- */
+
+model Product {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  brand            String
+  shortDescription String
+  description      String
+  price            Float
+  oldPrice         Float?
+  promotionalLabel String?
+  categoryId       String
+  /** JSON: string[] of image URLs (Cloudinary or absolute) */
+  images           Json     @default("[]")
+  /** in-stock | low-stock | out-of-stock | pre-order */
+  availability     String   @default("in-stock")
+  stockQty         Int      @default(0)
+  featured         Boolean  @default(false)
+  isNew            Boolean  @default(false)
+  rating           Float    @default(0)
+  /** JSON: SpecItem[] { label, value } */
+  specs            Json     @default("[]")
+  /** device | component | accessory */
+  specLayout       String   @default("device")
+  /** Admin-controlled: eligible for the storefront hero showcase */
+  heroEligible     Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([brand])
+  @@index([featured])
+  @@index([availability])
+  @@index([createdAt])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  tagline     String
+  description String
+  image       String
+  accent      String
+  icon        String
+  order       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PCBuild {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  /** gaming | workstation | budget | creator */
+  type         String   @default("gaming")
+  description  String
+  /** JSON: string[] image URLs */
+  images       Json     @default("[]")
+  /** JSON: BuildComponent[] { id, role, name, spec?, qty, price? } */
+  components   Json     @default("[]")
+  totalPrice   Float    @default(0)
+  availability String   @default("in-stock")
+  /** JSON: PerformanceBadge[] { label, score } */
+  performance  Json     @default("[]")
+  featured     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/* ------------------------ Commerce ------------------------- */
+
+model OrderRecord {
+  id            String   @id @default(cuid())
+  ref           String   @unique
+  customerName  String
+  customerPhone String
+  /** JSON: OrderLine[] { productId, name, qty, price } */
+  items         Json
+  total         Float
+  /** new | contacted | confirmed | completed | cancelled */
+  status        String   @default("new")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MaintenanceRecord {
+  id                 String   @id @default(cuid())
+  ref                String   @unique
+  customerName       String
+  customerPhone      String
+  /** laptop | desktop | phone | other */
+  deviceType        String
+  deviceBrand        String?
+  deviceModel        String?
+  /** hardware | software | performance | os | display | other */
+  problemCategory    String
+  problemDescription String
+  additionalNotes    String?
+  /** new | in-review | repairing | ready | delivered | cancelled */
+  status             String   @default("new")
+  adminNotes         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model StoreSettings {
+  id                 String   @id @default("singleton")
+  storeName          String
+  tagline            String
+  whatsappNumber     String
+  whatsappDisplay    String
+  facebookUrl        String
+  tiktokUrl          String
+  address            String
+  businessDescription String
+  logoUrl            String?
+  showBuildsCategory Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+}
+
+/* ------------------- Backup / Audit system ------------------- */
+
+model BackupRecord {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  products     Int      @default(0)
+  categories   Int      @default(0)
+  builds       Int      @default(0)
+  orders       Int      @default(0)
+  maintenance  Int      @default(0)
+  /** pending | success | failed */
+  status       String   @default("pending")
+  fileUrl      String?
+  fileName     String?
+  fileSize     Int?
+  exportPeriod String?
+  actor        String?
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  /** login | login_failed | logout | backup_created | reset_executed | crud actions... */
+  action    String
+  actor     String?
+  /** JSON: contextual details */
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}

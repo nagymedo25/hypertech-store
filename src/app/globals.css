@@ -1,0 +1,359 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ============================================================
+   HYPER TECH — Design Tokens · LUXURY LIGHT
+   ============================================================
+   A warm, editorial, premium light system derived from the
+   verified brand identity (electric-blue wordmark on charcoal):
+   • Warm ivory canvas          #F7F5F0
+   • Soft warm gray surfaces    #EFECE4 → #FFFFFF
+   • Deep warm charcoal text    #24221D
+   • Refined cobalt brand blue  #1A5CA6 (deepened for light)
+   • Brass / sage / oxblood     restrained secondary tones
+   The store feels expensive, calm and comfortable — never a
+   generic white template, never harsh black-on-white.
+   ============================================================ */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-tech: var(--font-tech);
+
+  /* shadcn compatibility */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* brand surfaces */
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-raised: var(--raised);
+  --color-hair: var(--border);
+  --color-faint: var(--faint);
+  --color-amber: var(--amber);
+  --color-mint: var(--mint);
+  --color-danger: var(--danger);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.875rem;
+
+  /* — Luxury Light palette (warm ivory) — */
+  --background: #f7f5f0;
+  --foreground: #24221d;
+  --surface: #fcfbf8;
+  --elevated: #ffffff;
+  --raised: #f0ede6;
+  --faint: #9b958b;
+  --muted: #efece4;
+  --muted-foreground: #6e695d;
+
+  --card: #ffffff;
+  --card-foreground: #24221d;
+  --popover: #ffffff;
+  --popover-foreground: #24221d;
+
+  --primary: #1a5ca6;
+  --primary-foreground: #fbfaf7;
+  --secondary: #edeae2;
+  --secondary-foreground: #24221d;
+  --accent: #e9e3d5;
+  --accent-foreground: #403a30;
+
+  --destructive: #b3382f;
+  --border: rgba(36, 34, 29, 0.12);
+  --input: rgba(36, 34, 29, 0.16);
+  --ring: #1a5ca6;
+
+  --amber: #a87b2f;
+  --mint: #2e7d5b;
+  --danger: #b3382f;
+
+  /* Ink metallic display gradient ("HYPER" side of the wordmark) */
+  --silver-a: #3d3a31;
+  --silver-b: #22201a;
+  --silver-c: #59554b;
+  --silver-d: #2d2b24;
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: auto; /* Lenis handles smoothing */
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), system-ui, sans-serif;
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(26, 92, 166, 0.18);
+  color: var(--foreground);
+}
+
+/* ------------------------- Focus visibility ------------------------- */
+:focus-visible {
+  outline: 2px solid rgba(26, 92, 166, 0.75);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* --------------------------- Scrollbars ----------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(36, 34, 29, 0.24) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(36, 34, 29, 0.03);
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(36, 34, 29, 0.2);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(36, 34, 29, 0.35);
+}
+
+/* ========================= Brand utilities ========================== */
+
+/* Ink metallic display text ("HYPER" side of the wordmark) */
+.text-silver {
+  background: linear-gradient(
+    180deg,
+    var(--silver-c) 0%,
+    var(--silver-b) 46%,
+    var(--silver-a) 62%,
+    var(--silver-d) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Refined cobalt display text ("TECH" side of the wordmark) */
+.text-electric {
+  background: linear-gradient(180deg, #5b8fc7 0%, #1a5ca6 55%, #14476f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Soft accent elevation for CTA surfaces (restrained, light-appropriate) */
+.glow-accent {
+  box-shadow:
+    0 10px 32px -12px rgba(26, 92, 166, 0.38),
+    0 24px 60px -28px rgba(26, 92, 166, 0.22);
+}
+
+.glow-accent-sm {
+  box-shadow: 0 8px 22px -10px rgba(26, 92, 166, 0.42);
+}
+
+/* Soft warm elevation used across cards (premium, not flat) */
+.shadow-card {
+  box-shadow:
+    0 1px 2px rgba(36, 31, 24, 0.04),
+    0 12px 32px -18px rgba(36, 31, 24, 0.16);
+}
+
+.shadow-card-lg {
+  box-shadow:
+    0 2px 4px rgba(36, 31, 24, 0.05),
+    0 28px 64px -28px rgba(36, 31, 24, 0.24);
+}
+
+/* Ivory glass panel — used sparingly (header, overlays) */
+.glass {
+  background: rgba(252, 251, 248, 0.82);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid rgba(36, 34, 29, 0.08);
+}
+
+/* Technical drafting grid (very subtle warm hairlines) */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(36, 34, 29, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(36, 34, 29, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.bg-grid-fine {
+  background-image:
+    linear-gradient(rgba(36, 34, 29, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(36, 34, 29, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Paper grain — barely-there texture for editorial depth */
+.bg-noise {
+  position: relative;
+}
+.bg-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 140px 140px;
+}
+
+/* Radial atmospheric warmth helper */
+.orb-glow {
+  background: radial-gradient(
+    circle at center,
+    rgba(26, 92, 166, 0.09) 0%,
+    rgba(26, 92, 166, 0.03) 42%,
+    transparent 70%
+  );
+}
+
+.orb-warm {
+  background: radial-gradient(
+    circle at center,
+    rgba(168, 123, 47, 0.1) 0%,
+    rgba(168, 123, 47, 0.03) 42%,
+    transparent 70%
+  );
+}
+
+/* Hairline divider with center fade */
+.hairline-x {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(36, 34, 29, 0.16) 20%,
+    rgba(36, 34, 29, 0.16) 80%,
+    transparent
+  );
+}
+
+/* Slanted editorial edge */
+.clip-slant-t {
+  clip-path: polygon(0 3.5rem, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Image treatment — clean light grade */
+.img-grade {
+  filter: saturate(1.04) contrast(1.02);
+}
+
+/* Skeleton shimmer */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(36, 34, 29, 0.05) 25%,
+    rgba(36, 34, 29, 0.1) 37%,
+    rgba(36, 34, 29, 0.05) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Marquee ticker */
+@keyframes marquee-rtl {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(50%);
+  }
+}
+.animate-marquee {
+  animation: marquee-rtl 28s linear infinite;
+}
+
+/* Slow rotation for orbital ring */
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 22s linear infinite;
+}
+.animate-spin-slower {
+  animation: spin-slow 44s linear infinite reverse;
+}
+
+/* Pulse for live availability dots */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(46, 125, 91, 0.45);
+  }
+  50% {
+    opacity: 0.75;
+    box-shadow: 0 0 0 5px rgba(46, 125, 91, 0);
+  }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 2.2s ease-in-out infinite;
+}
+
+/* Respect reduced motion for CSS animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-spin-slow,
+  .animate-spin-slower,
+  .animate-pulse-dot,
+  .shimmer {
+    animation: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Hide number input arrows for qty fields */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

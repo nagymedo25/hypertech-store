@@ -1,0 +1,682 @@
+[
+  {
+    "id": "prd-inv-002",
+    "slug": "lenovo-loq-15irx9-intel-core-i7-14700hx-3",
+    "name": "لابتوب Lenovo LOQ 15IRX9 — Intel Core i7 14700HX | NVIDIA RTX 4060 8G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج Intel Core i7 14700HX وكارت NVIDIA RTX 4060 8G وشاشة 14.0 بوصة بتردد 144Hz احترافي.",
+    "description": "يأتي لابتوب Lenovo LOQ 15IRX9 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج Intel Core i7 14700HX القوي وذاكرة عشوائية 16GB DDR5 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 4060 8G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 14.0 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 144Hz احترافي توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 52000,
+    "oldPrice": 58240,
+    "promotionalLabel": "مع الكرتونة الأصلية",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-3.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": true,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "Intel Core i7 14700HX (Intel)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 4060 8G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "16GB DDR5 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD M.2 NVMe PCIe High-Speed"
+      },
+      {
+        "label": "الشاشة",
+        "value": "14.0 بوصة Full HD (1920x1080) 144Hz احترافي IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "بحالة ممتازة مع الكرتونة الأصلية (BOX) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "16GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-003",
+    "slug": "lenovo-loq-15irx9-intel-core-i7-13650hx-4",
+    "name": "لابتوب Lenovo LOQ 15IRX9 — Intel Core i7 13650HX | NVIDIA RTX 4050 6G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج Intel Core i7 13650HX وكارت NVIDIA RTX 4050 6G وشاشة 14.0 بوصة بتردد 144Hz احترافي.",
+    "description": "يأتي لابتوب Lenovo LOQ 15IRX9 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج Intel Core i7 13650HX القوي وذاكرة عشوائية 12GB DDR5 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 4050 6G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 14.0 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 144Hz احترافي توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 16500,
+    "oldPrice": 18480,
+    "promotionalLabel": "مع الكرتونة الأصلية",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-3.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": true,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "Intel Core i7 13650HX (Intel)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 4050 6G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "12GB DDR5 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD M.2 NVMe PCIe High-Speed"
+      },
+      {
+        "label": "الشاشة",
+        "value": "14.0 بوصة Full HD (1920x1080) 144Hz احترافي IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "بحالة ممتازة مع الكرتونة الأصلية (BOX) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "12GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-004",
+    "slug": "lenovo-loq-15irx9-intel-core-i5-13450hx-5",
+    "name": "لابتوب Lenovo LOQ 15IRX9 — Intel Core i5 13450HX | NVIDIA RTX 3050 6G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج Intel Core i5 13450HX وكارت NVIDIA RTX 3050 6G وشاشة 14.0 بوصة بتردد 144Hz احترافي.",
+    "description": "يأتي لابتوب Lenovo LOQ 15IRX9 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج Intel Core i5 13450HX القوي وذاكرة عشوائية 16GB DDR5 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 3050 6G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 14.0 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 144Hz احترافي توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 35000,
+    "oldPrice": 39200,
+    "promotionalLabel": "مع الكرتونة الأصلية",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-3.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "Intel Core i5 13450HX (Intel)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 3050 6G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "16GB DDR5 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD M.2 NVMe PCIe High-Speed"
+      },
+      {
+        "label": "الشاشة",
+        "value": "14.0 بوصة Full HD (1920x1080) 144Hz احترافي IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "بحالة ممتازة مع الكرتونة الأصلية (BOX) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "16GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-006",
+    "slug": "lenovo-loq-15irx9-intel-core-i5-12450hx-7",
+    "name": "لابتوب Lenovo LOQ 15IRX9 — Intel Core i5 12450HX | NVIDIA RTX 2050 4G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج Intel Core i5 12450HX وكارت NVIDIA RTX 2050 4G وشاشة 14.0 بوصة بتردد 144Hz احترافي.",
+    "description": "يأتي لابتوب Lenovo LOQ 15IRX9 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج Intel Core i5 12450HX القوي وذاكرة عشوائية 8GB DDR5 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 2050 4G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 14.0 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 144Hz احترافي توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 31000,
+    "oldPrice": 34720,
+    "promotionalLabel": "سعر حصري",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-3.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "Intel Core i5 12450HX (Intel)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 2050 4G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "8GB DDR5 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD M.2 NVMe PCIe High-Speed"
+      },
+      {
+        "label": "الشاشة",
+        "value": "14.0 بوصة Full HD (1920x1080) 144Hz احترافي IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "فرز أول بحالة الزيرو الممتازة (Grade A) مع شاحن أصلي (شاحن135)"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "8GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-007",
+    "slug": "lenovo-loq-15irh8-rgp-intel-core-i5-12450h-8",
+    "name": "لابتوب Lenovo LOQ 15IRH8 RGP — Intel Core i5 12450H | NVIDIA RTX 2050 4G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج Intel Core i5 12450H وكارت NVIDIA RTX 2050 4G وشاشة 14.0 بوصة بتردد 144Hz احترافي.",
+    "description": "يأتي لابتوب Lenovo LOQ 15IRH8 RGP ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج Intel Core i5 12450H القوي وذاكرة عشوائية 8GB DDR5 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 2050 4G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 14.0 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 144Hz احترافي توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 30000,
+    "oldPrice": 33600,
+    "promotionalLabel": "سعر حصري",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-3.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "Intel Core i5 12450H (Intel)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 2050 4G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "8GB DDR5 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD M.2 NVMe PCIe High-Speed"
+      },
+      {
+        "label": "الشاشة",
+        "value": "14.0 بوصة Full HD (1920x1080) 144Hz احترافي IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "تم الفحص الفني الشامل واختبار كل المنافذ والحرارة (Ready & Tested) مع شاحن أصلي (شاحن135)"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "8GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-009",
+    "slug": "lenovo-ideapad-gaming-3-amd-ryzen-5-5500h-10",
+    "name": "لابتوب Lenovo IdeaPad Gaming 3 — AMD RYZEN 5 5500H | NVIDIA RTX 2050 4G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج AMD RYZEN 5 5500H وكارت NVIDIA RTX 2050 4G وشاشة 15.6 بوصة بتردد 120Hz سلس.",
+    "description": "يأتي لابتوب Lenovo IdeaPad Gaming 3 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج AMD RYZEN 5 5500H القوي وذاكرة عشوائية 8GB DDR4 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 2050 4G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 15.6 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 120Hz سلس توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 23500,
+    "oldPrice": 26320,
+    "promotionalLabel": "مع الكرتونة الأصلية",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-1.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "AMD RYZEN 5 5500H (AMD)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 2050 4G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "8GB DDR4 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD فائق السرعة"
+      },
+      {
+        "label": "الشاشة",
+        "value": "15.6 بوصة Full HD (1920x1080) 120Hz سلس IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "بحالة ممتازة مع الكرتونة الأصلية (BOX) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "8GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-010",
+    "slug": "lenovo-ideapad-gaming-3-amd-ryzen-5-5600h-11",
+    "name": "لابتوب Lenovo IDEAPAD GAMING 3 — AMD RYZEN 5 5600H | NVIDIA RTX 3050TI 4G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج AMD RYZEN 5 5600H وكارت NVIDIA RTX 3050TI 4G وشاشة 15.6 بوصة بتردد 120Hz سلس.",
+    "description": "يأتي لابتوب Lenovo IDEAPAD GAMING 3 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج AMD RYZEN 5 5600H القوي وذاكرة عشوائية 8GB DDR4 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 3050TI 4G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 15.6 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 120Hz سلس توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 31000,
+    "oldPrice": 34720,
+    "promotionalLabel": "مع الكرتونة الأصلية",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-1.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "AMD RYZEN 5 5600H (AMD)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 3050TI 4G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "8GB DDR4 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD فائق السرعة"
+      },
+      {
+        "label": "الشاشة",
+        "value": "15.6 بوصة Full HD (1920x1080) 120Hz سلس IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "بحالة ممتازة مع الكرتونة الأصلية (BOX) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "8GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-011",
+    "slug": "lenovo-ideapad-gaming-3rgp-amd-ryzen-7-5800h-12",
+    "name": "لابتوب Lenovo IDEAPAD GAMING 3RGP — AMD RYZEN 7 5800H | NVIDIA RTX 3050 4G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج AMD RYZEN 7 5800H وكارت NVIDIA RTX 3050 4G وشاشة 16.0 بوصة بتردد 165Hz فائق السرعة.",
+    "description": "يأتي لابتوب Lenovo IDEAPAD GAMING 3RGP ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج AMD RYZEN 7 5800H القوي وذاكرة عشوائية 16GB DDR4 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 3050 4G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 16.0 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 165Hz فائق السرعة توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 31000,
+    "oldPrice": 34720,
+    "promotionalLabel": "سعر حصري",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-1.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "AMD RYZEN 7 5800H (AMD)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 3050 4G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "16GB DDR4 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "1TB — SSD فائق السرعة"
+      },
+      {
+        "label": "الشاشة",
+        "value": "16.0 بوصة Full HD (1920x1080) 165Hz فائق السرعة IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "تم الفحص الفني الشامل واختبار كل المنافذ والحرارة (Ready & Tested) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "16GB",
+    "baseStorage": "1TB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-012",
+    "slug": "lenovo-ideapad-gaming-3-amd-ryzen-5-6600h-13",
+    "name": "لابتوب Lenovo IdeaPad Gaming 3 — AMD Ryzen 5 6600H | NVIDIA RTX 3050 4G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج AMD Ryzen 5 6600H وكارت NVIDIA RTX 3050 4G وشاشة 15.6 بوصة بتردد 120Hz سلس.",
+    "description": "يأتي لابتوب Lenovo IdeaPad Gaming 3 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج AMD Ryzen 5 6600H القوي وذاكرة عشوائية 8GB DDR5 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 3050 4G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 15.6 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 120Hz سلس توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 31500,
+    "oldPrice": 35280,
+    "promotionalLabel": "سعر حصري",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-1.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "AMD Ryzen 5 6600H (AMD)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 3050 4G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "8GB DDR5 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD M.2 NVMe PCIe High-Speed"
+      },
+      {
+        "label": "الشاشة",
+        "value": "15.6 بوصة Full HD (1920x1080) 120Hz سلس IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "فرز أول بحالة الزيرو الممتازة (Grade A) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "8GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  },
+  {
+    "id": "prd-inv-014",
+    "slug": "lenovo-yoga-slim-7-intel-core-i7-1165g7-15",
+    "name": "لابتوب Lenovo YOGA SLIM 7 — Intel Core I7 1165G7 | Intel Iris Xe Graphics",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب أعمال ودراسة متوازن وعملي يجمع بين السرعة والاعتمادية مع شاشة 14.0 بوصة وبطارية تدوم طويلاً.",
+    "description": "لابتوب Lenovo YOGA SLIM 7 هو الخيار الأمثل للطلبة، ورواد الأعمال، والعمل المكتبي والتصفح والبرمجة. يقدم توازناً استثنائياً بين سرعة الأداء بفضل معالج Intel Core I7 1165G7، وسرعة استجابة قرص SSD فائق السرعة، مع تصميم أنيق وعصري يسهل حمله وتنقله في كل مكان، وبطارية ذات كفاءة عالية لتلبية احتياجات يوم عمل كامل بكل سهولة.",
+    "price": 25000,
+    "oldPrice": 28000,
+    "promotionalLabel": "سعر حصري",
+    "categoryId": "cat-economic",
+    "images": [
+      "/products/laptop-silver.png",
+      "/products/laptop-used.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": false,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "Intel Core I7 1165G7 (Intel)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "Intel Iris Xe Graphics"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "16GB DDR4 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "256GB — SSD فائق السرعة"
+      },
+      {
+        "label": "الشاشة",
+        "value": "14.0 بوصة Full HD (1920x1080) 60Hz IPS Anti-Glare — شاشة لمس متحولة 360 درجة (2-in-1)"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "فرز أول بحالة الزيرو الممتازة (Grade A) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "أعمال مكتبية، دراسة، برمجة، وتصفح يومي"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": false,
+    "baseRam": "16GB",
+    "baseStorage": "256GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T18:58:01.983Z",
+    "updatedAt": "2026-11-20T18:58:01.983Z"
+  }
+]

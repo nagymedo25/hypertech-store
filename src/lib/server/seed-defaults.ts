@@ -27,19 +27,6 @@ const DEFAULT_SITE_CONTENT = {
 
 const DEFAULT_WORLDS_CATEGORIES = [
   {
-    id: "cat-workstation",
-    slug: "workstation",
-    name: "ورك ستيشن",
-    tagline: "قوة وإنتاجية فائقة للأعمال والريندر",
-    description:
-      "أجهزة ومحطات عمل احترافية موجهة لمهندسي الريندر، المونتاج، التصميم ثلاثي الأبعاد، والمهام الشاقة بأقصى درجات الاستقرار والاعتمادية.",
-    image: "/atmosphere/cat-computers.jpg",
-    accent: "#0284c7",
-    icon: "Cpu",
-    order: 0,
-    active: true,
-  },
-  {
     id: "cat-gaming",
     slug: "gaming",
     name: "جيمنج",
@@ -49,6 +36,19 @@ const DEFAULT_WORLDS_CATEGORIES = [
     image: "/atmosphere/cat-builds.jpg",
     accent: "#10b981",
     icon: "Gamepad2",
+    order: 0,
+    active: true,
+  },
+  {
+    id: "cat-workstation",
+    slug: "workstation",
+    name: "ورك ستيشن",
+    tagline: "قوة وإنتاجية فائقة للأعمال والريندر",
+    description:
+      "أجهزة ومحطات عمل احترافية موجهة لمهندسي الريندر، المونتاج، التصميم ثلاثي الأبعاد، والمهام الشاقة بأقصى درجات الاستقرار والاعتمادية.",
+    image: "/atmosphere/cat-computers.jpg",
+    accent: "#0284c7",
+    icon: "Cpu",
     order: 1,
     active: true,
   },
@@ -63,6 +63,42 @@ const DEFAULT_WORLDS_CATEGORIES = [
     accent: "#f59e0b",
     icon: "Coins",
     order: 2,
+    active: true,
+  },
+  {
+    id: "cat-storage",
+    slug: "storage",
+    name: "تخزين - SSD & HDD",
+    tagline: "أقراص NVMe و SATA وهاردات تخزين سريعة",
+    description: "أقراص M.2 NVMe فائقة السرعة وهاردات تخزين داخلية وخارجية بأعلى درجات الموثوقية لحفظ ألعابك وملفاتك الكبيرة.",
+    image: "/atmosphere/cat-computers.jpg",
+    accent: "#5c6b7a",
+    icon: "HardDrive",
+    order: 3,
+    active: true,
+  },
+  {
+    id: "cat-ram",
+    slug: "ram",
+    name: "رامات - RAM",
+    tagline: "ذاكرة عشوائية DDR4 و DDR5 فائقة السرعة",
+    description: "شرائح ذاكرة عشوائية DDR4 و DDR5 بسرعات وتوقيتات استثنائية لترقية أجهزة اللابتوب والكمبيوتر المكتبي.",
+    image: "/atmosphere/cat-computers.jpg",
+    accent: "#a8703c",
+    icon: "MemoryStick",
+    order: 4,
+    active: true,
+  },
+  {
+    id: "cat-computers",
+    slug: "computers",
+    name: "أجهزة مكتبية وميني PC",
+    tagline: "أجهزة كمبيوتر ومحطات مصغرة مدمجة",
+    description: "أجهزة ماك ميني وكمبيوترات مكتبية مدمجة بأداء فائق وتصميم يوفر المساحة بأعلى كفاءة في استهلاك الطاقة.",
+    image: "/atmosphere/cat-computers.jpg",
+    accent: "#8c4a52",
+    icon: "Cpu",
+    order: 5,
     active: true,
   },
 ];
@@ -87,37 +123,55 @@ export async function ensureBootstrapDefaults(): Promise<void> {
       }
     }
 
-    // 2. Ensure products are assigned to worlds if unassigned
-    const gamingProducts = await db.product.count({ where: { categoryId: "cat-gaming" } });
-    if (gamingProducts === 0) {
-      await db.product.updateMany({
-        where: {
-          id: {
-            in: [
-              "prd-001", "prd-002", "prd-003", "prd-006",
-              "prd-502", "prd-503", "prd-505", "prd-506", "prd-507", "prd-509",
-            ],
-          },
-        },
-        data: { categoryId: "cat-gaming" },
-      });
-      await db.product.updateMany({
-        where: {
-          id: {
-            in: ["prd-004", "prd-007", "prd-501", "prd-504", "prd-508"],
-          },
-        },
-        data: { categoryId: "cat-workstation" },
-      });
-      await db.product.updateMany({
-        where: {
-          id: {
-            in: ["prd-005", "prd-510"],
-          },
-        },
-        data: { categoryId: "cat-economic" },
-      });
-      console.log("[seed] Distributed sample products into default worlds.");
+    // 2. Ensure products exist; if zero, import normalized catalog
+    const totalProducts = await db.product.count();
+    if (totalProducts === 0) {
+      try {
+        const fs = await import("fs");
+        const path = await import("path");
+        const catalogFile = path.join(process.cwd(), "data", "catalog-products.json");
+        if (fs.existsSync(catalogFile)) {
+          const catalog = JSON.parse(fs.readFileSync(catalogFile, "utf8"));
+          const CHUNK = 5;
+          for (let i = 0; i < catalog.length; i += CHUNK) {
+            const batch = catalog.slice(i, i + CHUNK);
+            await Promise.all(
+              batch.map((p: any) =>
+                db.product.create({
+                  data: {
+                    id: p.id,
+                    slug: p.slug,
+                    name: p.name,
+                    brand: p.brand,
+                    shortDescription: p.shortDescription,
+                    description: p.description,
+                    price: p.price,
+                    oldPrice: p.oldPrice ?? null,
+                    promotionalLabel: p.promotionalLabel ?? null,
+                    categoryId: p.categoryId,
+                    images: p.images,
+                    availability: p.availability,
+                    stockQty: p.stockQty,
+                    featured: p.featured,
+                    isNew: p.isNew,
+                    rating: p.rating,
+                    specs: p.specs,
+                    specLayout: p.specLayout,
+                    heroEligible: p.heroEligible,
+                    baseRam: p.baseRam ?? null,
+                    baseStorage: p.baseStorage ?? null,
+                    allowRamUpgrade: p.allowRamUpgrade ?? false,
+                    allowStorageUpgrade: p.allowStorageUpgrade ?? false,
+                  },
+                })
+              )
+            );
+          }
+          console.log(`[seed] Auto-seeded ${catalog.length} normalized products from catalog-products.json.`);
+        }
+      } catch (seedErr) {
+        console.warn("[seed] Auto-seed products failed:", seedErr);
+      }
     }
 
     const rateCount = await db.hardwareUpgradeRate.count();

@@ -1,0 +1,70 @@
+[
+  {
+    "id": "prd-inv-002",
+    "slug": "lenovo-loq-15irx9-intel-core-i7-14700hx-3",
+    "name": "لابتوب Lenovo LOQ 15IRX9 — Intel Core i7 14700HX | NVIDIA RTX 4060 8G",
+    "brand": "Lenovo",
+    "shortDescription": "لابتوب جيمنج وصناعة محتوى فائق الأداء بمعالج Intel Core i7 14700HX وكارت NVIDIA RTX 4060 8G وشاشة 14.0 بوصة بتردد 144Hz احترافي.",
+    "description": "يأتي لابتوب Lenovo LOQ 15IRX9 ليلبي تطلعات عشاق الألعاب وصناع المحتوى والمهندسين. مجهز بمعالج Intel Core i7 14700HX القوي وذاكرة عشوائية 16GB DDR5 قابلة للترقية، بالإضافة إلى كارت الشاشة المنفصل NVIDIA RTX 4060 8G ليمنحك معدل إطارات مرتفع وتجربة لعب وانتاجية غامرة. الشاشة مقاس 14.0 بوصة بدقة Full HD (1920x1080) ومعدل تحديث 144Hz احترافي توفر سلاسة فائقة في الحركة مع نظام تبريد احترافي للحفاظ على استقرار الأداء لساعات طويلة من العمل واللعب الشاق.",
+    "price": 52000,
+    "oldPrice": 58240,
+    "promotionalLabel": "مع الكرتونة الأصلية",
+    "categoryId": "cat-gaming",
+    "images": [
+      "/products/laptop-gaming-3.png",
+      "/products/laptop-tough.png"
+    ],
+    "availability": "low-stock",
+    "stockQty": 1,
+    "featured": true,
+    "isNew": false,
+    "rating": 4.8,
+    "specs": [
+      {
+        "label": "المعالج (CPU)",
+        "value": "Intel Core i7 14700HX (Intel)"
+      },
+      {
+        "label": "كارت الشاشة (GPU)",
+        "value": "NVIDIA RTX 4060 8G"
+      },
+      {
+        "label": "الذاكرة العشوائية (RAM)",
+        "value": "16GB DDR5 (قابلة للترقية لدى هايبر تك)"
+      },
+      {
+        "label": "وحدة التخزين",
+        "value": "512GB — SSD M.2 NVMe PCIe High-Speed"
+      },
+      {
+        "label": "الشاشة",
+        "value": "14.0 بوصة Full HD (1920x1080) 144Hz احترافي IPS Anti-Glare"
+      },
+      {
+        "label": "المنافذ والاتصال",
+        "value": "USB-C, USB 3.2, HDMI, Audio Jack, Wi-Fi 6, Bluetooth"
+      },
+      {
+        "label": "الهيكل والتصميم",
+        "value": "تصميم أنيق ومتين خفيف الوزن مع نظام تبريد احترافي"
+      },
+      {
+        "label": "الحالة والمشتملات",
+        "value": "بحالة ممتازة مع الكرتونة الأصلية (BOX) مع شاحن أصلي وكابل الطاقة"
+      },
+      {
+        "label": "فئة الاستخدام",
+        "value": "جيمنج، بث ألعاب، مونتاج وبناء عوالم"
+      }
+    ],
+    "specLayout": "device",
+    "heroEligible": true,
+    "baseRam": "16GB",
+    "baseStorage": "512GB",
+    "allowRamUpgrade": true,
+    "allowStorageUpgrade": true,
+    "customHardwarePricing": {},
+    "createdAt": "2026-11-20T19:03:08.488Z",
+    "updatedAt": "2026-11-20T19:03:08.488Z"
+  }
+]

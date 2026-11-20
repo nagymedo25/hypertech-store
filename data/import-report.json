@@ -1,0 +1,37 @@
+{
+  "totalSourceRows": 136,
+  "processedCount": 95,
+  "duplicatesFound": 2,
+  "incompleteRows": 1,
+  "rejectedRows": [
+    {
+      "line": 31,
+      "reason": "Barcode / number artifact",
+      "raw": ",,,,,,,,,,,,,,,,,,,,502601821"
+    },
+    {
+      "line": 32,
+      "reason": "Barcode / number artifact",
+      "raw": ",,,,,,,,,,,,,,,,,,,,2.61026001297262e+15"
+    },
+    {
+      "line": 113,
+      "reason": "Incomplete record: Model name only without CPU, RAM, or Storage",
+      "raw": ",LENOVO THINKPAD,,,,,,,,,,,,,,,,,,,"
+    },
+    {
+      "line": 136,
+      "reason": "System artifact entry (km)",
+      "raw": "km,,,,,,,,,,,,,,,,,,,,"
+    }
+  ],
+  "unverifiedSpecs": 0,
+  "categoriesCount": {
+    "gaming": 36,
+    "economic": 39,
+    "workstation": 3,
+    "storage": 10,
+    "ram": 6,
+    "computers": 1
+  }
+}

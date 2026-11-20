@@ -15,7 +15,11 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
+  CheckCircle2,
   Cpu,
+  FileSpreadsheet,
+  FileText,
   HardDrive,
   Image as ImageIcon,
   Loader2,
@@ -23,10 +27,12 @@ import {
   Package,
   Pencil,
   Plus,
+  RefreshCw,
   SlidersHorizontal,
   Sparkles,
   Star,
   Trash2,
+  UploadCloud,
 } from "lucide-react";
 import { useMockDB } from "@/lib/store/db-store";
 import { repositories } from "@/lib/repositories";
@@ -195,6 +201,63 @@ export default function ProductsManager() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [starPendingId, setStarPendingId] = useState<string | null>(null);
+
+  /* ---------------------- CSV / Excel Import State ---------------------- */
+  const [importOpen, setImportOpen] = useState(false);
+  const [csvText, setCsvText] = useState("");
+  const [clearExisting, setClearExisting] = useState(false);
+  const [importPreview, setImportPreview] = useState<any>(null);
+  const [importPending, setImportPending] = useState(false);
+
+  const handlePreview = async () => {
+    if (!csvText.trim()) {
+      toast.error("يرجى إدخال أو لصق محتوى ملف الـ CSV أولاً");
+      return;
+    }
+    setImportPending(true);
+    try {
+      const res = await fetch("/api/admin/products/import", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ csvText, preview: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل التحقق من الملف");
+      setImportPreview(data.report);
+      toast.success("تم تحليل الكشف بنجاح", {
+        description: `تم تجهيز ${data.report.processed} منتج صالح للاستيراد.`,
+      });
+    } catch (err: any) {
+      toast.error("خطأ في التحقق من الملف", { description: err.message });
+    } finally {
+      setImportPending(false);
+    }
+  };
+
+  const handleExecuteImport = async () => {
+    if (!csvText.trim()) return;
+    setImportPending(true);
+    try {
+      const res = await fetch("/api/admin/products/import", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ csvText, preview: false, clearExisting }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل تنفيذ الاستيراد");
+      toast.success("اكتمل الاستيراد بنجاح! 🚀", {
+        description: `تم إدراج ${data.report.processed} منتج في قاعدة بيانات المتجر.`,
+      });
+      setImportOpen(false);
+      setCsvText("");
+      setImportPreview(null);
+      window.location.reload();
+    } catch (err: any) {
+      toast.error("فشل تنفيذ الاستيراد", { description: err.message });
+    } finally {
+      setImportPending(false);
+    }
+  };
 
   const errors = validateForm(form);
   const invalid = Object.keys(errors).length > 0;
@@ -378,6 +441,14 @@ export default function ProductsManager() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setImportOpen(true)}
+            className="min-h-9 gap-2 border-hair bg-elevated hover:bg-surface text-foreground"
+          >
+            <FileSpreadsheet className="h-4 w-4 text-emerald-500" aria-hidden />
+            استيراد كشف Excel / CSV
+          </Button>
           <Button onClick={openCreate} className="min-h-9 glow-accent-sm">
             <Plus className="h-4 w-4" aria-hidden />
             إضافة منتج
@@ -1070,6 +1141,144 @@ export default function ProductsManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* --------------------------- CSV / Excel Import Dialog --------------------------- */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
+          <DialogHeader className="text-right">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <FileSpreadsheet className="h-5 w-5 text-emerald-500" />
+              <span>استيراد كتالوج المنتجات من كشف Excel / CSV</span>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              ارفع ملف .csv أو الصق محتويات كشف الجرد مباشرة. سيقوم النظام بتحليل المواصفات العتادية وتصنيف الأجهزة واكتشاف التكرارات تلقائيًا.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 pt-2">
+            {/* File Upload Zone */}
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-hair bg-surface/50 p-6 text-center">
+              <UploadCloud className="h-8 w-8 text-primary mb-2" />
+              <label className="cursor-pointer font-bold text-sm text-primary hover:underline">
+                اختر ملف CSV من جهازك
+                <input
+                  type="file"
+                  accept=".csv,.txt"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const text = await file.text();
+                      setCsvText(text);
+                      toast.success(`تم قراءة الملف «${file.name}»`);
+                    }
+                  }}
+                />
+              </label>
+              <p className="text-xs text-muted-foreground mt-1">يدعم ملفات CSV الصادرة من Excel أو Google Sheets</p>
+            </div>
+
+            {/* Direct Paste Area */}
+            <div>
+              <Label className="text-xs font-bold text-muted-foreground mb-1 block">
+                أو الصق نص الكشف هنا:
+              </Label>
+              <Textarea
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+                rows={5}
+                placeholder="NO.,Model,CPU,Ram,Hard,VGA,Monitor,Price,Num..."
+                className="font-mono text-xs leading-relaxed"
+              />
+            </div>
+
+            {/* Replace options */}
+            <div className="flex items-center justify-between rounded-xl border border-hair bg-surface/40 p-3.5">
+              <div>
+                <p className="text-sm font-bold">استبدال الكتالوج الحالي بالكامل</p>
+                <p className="text-xs text-muted-foreground">حذف المنتجات الحالية واستبدالها بهذا الكشف الجديد (Safe Replacement)</p>
+              </div>
+              <Switch
+                checked={clearExisting}
+                onCheckedChange={setClearExisting}
+              />
+            </div>
+
+            {/* Preview Action */}
+            <div className="flex items-center justify-between pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePreview}
+                disabled={importPending || !csvText.trim()}
+                className="gap-2"
+              >
+                {importPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                معاينة وتحليل الكشف
+              </Button>
+            </div>
+
+            {/* Analysis & Preview Report */}
+            {importPreview && (
+              <div className="rounded-xl border border-hair bg-surface p-4 space-y-3">
+                <div className="flex items-center gap-2 font-bold text-sm text-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <span>نتائج الفحص والتحليل الذكي:</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div className="rounded-lg bg-elevated border border-hair p-2.5">
+                    <p className="text-muted-foreground">المنتجات الصالحة</p>
+                    <p className="font-tech text-base font-bold text-primary mt-1">{importPreview.processed} منتج</p>
+                  </div>
+                  <div className="rounded-lg bg-elevated border border-hair p-2.5">
+                    <p className="text-muted-foreground">أجهزة جيمنج</p>
+                    <p className="font-tech text-base font-bold text-emerald-500 mt-1">{importPreview.categoriesBreakdown?.gaming || 0}</p>
+                  </div>
+                  <div className="rounded-lg bg-elevated border border-hair p-2.5">
+                    <p className="text-muted-foreground">أجهزة ورك ستيشن</p>
+                    <p className="font-tech text-base font-bold text-sky-500 mt-1">{importPreview.categoriesBreakdown?.workstation || 0}</p>
+                  </div>
+                  <div className="rounded-lg bg-elevated border border-hair p-2.5">
+                    <p className="text-muted-foreground">اقتصادي وبيزنس</p>
+                    <p className="font-tech text-base font-bold text-amber-500 mt-1">{importPreview.categoriesBreakdown?.economic || 0}</p>
+                  </div>
+                  <div className="rounded-lg bg-elevated border border-hair p-2.5">
+                    <p className="text-muted-foreground">تخزين ورامات</p>
+                    <p className="font-tech text-base font-bold text-muted-foreground mt-1">
+                      {(importPreview.categoriesBreakdown?.storage || 0) + (importPreview.categoriesBreakdown?.ram || 0)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-elevated border border-hair p-2.5">
+                    <p className="text-muted-foreground">تكرارات تم دمجها</p>
+                    <p className="font-tech text-base font-bold text-foreground mt-1">{importPreview.duplicatesCount || 0}</p>
+                  </div>
+                </div>
+
+                {importPreview.rejectedCount > 0 && (
+                  <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-2.5 text-xs text-amber-600 dark:text-amber-400">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>تم استبعاد {importPreview.rejectedCount} أسطر غير صالحة (صفوف باركود أو بيانات فارغة).</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-hair mt-4">
+            <Button variant="outline" onClick={() => setImportOpen(false)} disabled={importPending}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleExecuteImport}
+              disabled={importPending || !csvText.trim()}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {importPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              تأكيد واستيراد الآن
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

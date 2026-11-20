@@ -126,8 +126,23 @@ export async function requireAdmin(req: Request): Promise<string | null> {
   const username = verifySessionToken(readSessionCookie(req));
   if (!username) return null;
   // Confirm the account still exists (deactivated/removed admins die with their sessions)
-  const admin = await db.adminUser.findUnique({ where: { username } });
-  return admin ? username : null;
+  const admin = await db.adminUser.findFirst({
+    where: {
+      OR: [{ username }, { email: username }],
+    },
+  });
+  return admin ? admin.username : null;
+}
+
+/** Route helper: returns the authenticated admin user record or null. */
+export async function getAdminAccount(req: Request) {
+  const username = verifySessionToken(readSessionCookie(req));
+  if (!username) return null;
+  return db.adminUser.findFirst({
+    where: {
+      OR: [{ username }, { email: username }],
+    },
+  });
 }
 
 /* ------------------------- Rate limiting ------------------------- */

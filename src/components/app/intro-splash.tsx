@@ -23,7 +23,6 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
     if (prefersReducedMotion()) {
       // One-time mount decision reading an external system (matchMedia) —
       // the cleanest place to collapse the splash for reduced-motion users.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGone(true);
       onDone();
       return;

@@ -23,6 +23,7 @@ import {
   Plus,
   Star,
   Trash2,
+  X,
 } from "lucide-react";
 import { useMockDB } from "@/lib/store/db-store";
 import { repositories } from "@/lib/repositories";
@@ -36,11 +37,15 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogOverlay,
+  DialogPortal,
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -355,7 +360,7 @@ export default function BuildsManager() {
   /* --------------------------------- Render -------------------------------- */
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -477,310 +482,386 @@ export default function BuildsManager() {
           if (!o) setAttempted(false);
         }}
       >
-        <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0">
-          <DialogHeader className="space-y-1 border-b border-hair px-6 py-4 text-right">
-            <DialogTitle>{editing ? "تعديل تجميعة" : "إضافة تجميعة جديدة"}</DialogTitle>
-            <DialogDescription>
-              اكتب المكونات وكمياتها — وزر «احسب من المكونات» يملّي السعر لوحده.
-            </DialogDescription>
-          </DialogHeader>
-
-          <ScrollArea className="h-[62vh]">
-            <div className="space-y-6 px-6 py-5">
-              {/* Basics */}
-              <FormSectionTitle icon={Cpu}>الأساسيات</FormSectionTitle>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="b-title">عنوان التجميعة *</Label>
-                  <Input
-                    id="b-title"
-                    value={form.title}
-                    onChange={(e) => setField("title", e.target.value)}
-                    placeholder="مثال: وحش الألعاب — RTX 4070"
-                  />
-                  <FieldError>{attempted ? errors.title : undefined}</FieldError>
+        <DialogPortal>
+          <DialogOverlay />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+            <DialogPrimitive.Content
+              className="pointer-events-auto flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-hair bg-elevated/95 shadow-2xl backdrop-blur-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 text-foreground"
+            >
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-hair bg-elevated/95 px-4 py-3.5 sm:px-6 sm:py-4 backdrop-blur-md">
+                <div className="space-y-0.5 text-right">
+                  <DialogTitle className="text-base font-bold sm:text-lg">
+                    {editing ? "تعديل تجميعة" : "إضافة تجميعة جديدة"}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground">
+                    اكتب المكونات وكمياتها — وزر «احسب من المكونات» يملّي السعر لوحده.
+                  </DialogDescription>
                 </div>
-
-                <div className="space-y-1.5">
-                  <Label>النوع</Label>
-                  <Select value={form.type} onValueChange={(v) => setField("type", v as BuildType)}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TYPE_OPTIONS.map((t) => (
-                        <SelectItem key={t.value} value={t.value}>
-                          {t.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label>حالة التوفر</Label>
-                  <Select
-                    value={form.availability}
-                    onValueChange={(v) => setField("availability", v as ProductAvailability)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {AVAILABILITY_OPTIONS.map((a) => (
-                        <SelectItem key={a.value} value={a.value}>
-                          {a.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label htmlFor="b-desc">الوصف</Label>
-                  <Textarea
-                    id="b-desc"
-                    rows={3}
-                    value={form.description}
-                    onChange={(e) => setField("description", e.target.value)}
-                    placeholder="لمن التجميعة دي؟ وأقوى مميزاتها…"
-                  />
-                </div>
-
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-hair bg-elevated/40 p-3.5 sm:col-span-2">
-                  <div>
-                    <Label htmlFor="b-featured" className="text-sm font-medium">
-                      تجميعة مميزة
-                    </Label>
-                    <p className="text-[0.68rem] text-faint">تظهر أولًا في صفحة التجميعات</p>
-                  </div>
-                  <Switch
-                    id="b-featured"
-                    checked={form.featured}
-                    onCheckedChange={(v) => setField("featured", v)}
-                    aria-label="تمييز التجميعة"
-                  />
-                </div>
-              </div>
-
-              {/* Total price */}
-              <FormSectionTitle icon={Calculator}>السعر الإجمالي</FormSectionTitle>
-              <div className="space-y-2">
-                <div className="flex items-end gap-2">
-                  <div className="flex-1 space-y-1.5">
-                    <Label htmlFor="b-price">السعر الإجمالي (ج.م) *</Label>
-                    <Input
-                      id="b-price"
-                      type="number"
-                      min={0}
-                      dir="ltr"
-                      className="font-tech"
-                      value={form.totalPrice}
-                      onChange={(e) => setField("totalPrice", e.target.value)}
-                      placeholder="45000"
-                    />
-                  </div>
+                <DialogClose asChild>
                   <Button
                     type="button"
-                    variant="outline"
-                    onClick={computeFromComponents}
-                    className="min-h-10 shrink-0"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="إغلاق النافذة"
+                    className="h-9 w-9 shrink-0 rounded-lg text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground"
                   >
-                    <Calculator className="h-4 w-4" aria-hidden />
-                    احسب من المكونات
+                    <X className="h-5 w-5" aria-hidden />
                   </Button>
-                </div>
-                <FieldError>{attempted ? errors.totalPrice : undefined}</FieldError>
-                <p className="text-[0.68rem] text-faint">
-                  اتركه أو اضبطه يدويًا — زر «احسب من المكونات» يملأ مجموع أسعار المكونات.
-                </p>
+                </DialogClose>
               </div>
 
-              {/* Components */}
-              <FormSectionTitle icon={Cpu}>مكونات التجميعة</FormSectionTitle>
-              <div className="space-y-2">
-                {/* Header labels (desktop) */}
-                <div className="hidden gap-2 px-1 text-[0.68rem] font-medium text-faint lg:grid lg:grid-cols-[1fr_1.4fr_1.1fr_4rem_5.5rem_auto]">
-                  <span>الدور</span>
-                  <span>الاسم *</span>
-                  <span>المواصفة</span>
-                  <span>الكمية</span>
-                  <span>السعر (وحدة)</span>
-                  <span />
-                </div>
-
-                {form.components.map((r) => (
-                  <div
-                    key={r.key}
-                    className="grid gap-2 rounded-xl border border-hair p-3 lg:grid-cols-[1fr_1.4fr_1.1fr_4rem_5.5rem_auto] lg:items-center lg:rounded-none lg:border-x-0 lg:border-t-0 lg:border-b lg:border-hair/60 lg:p-0 lg:pb-2"
-                  >
+              {/* Scrollable Body */}
+              <div className="flex-1 overflow-y-auto max-h-[calc(90vh-9rem)] px-4 py-5 sm:px-6 space-y-6 overscroll-contain">
+                {/* Basics */}
+                <FormSectionTitle icon={Cpu}>الأساسيات</FormSectionTitle>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="b-title">عنوان التجميعة *</Label>
                     <Input
-                      value={r.role}
-                      onChange={(e) => updateComponent(r.key, "role", e.target.value)}
-                      placeholder="المعالج"
-                      aria-label="دور المكون في التجميعة"
+                      id="b-title"
+                      value={form.title}
+                      onChange={(e) => setField("title", e.target.value)}
+                      placeholder="مثال: وحش الألعاب — RTX 4070"
                     />
-                    <Input
-                      value={r.name}
-                      onChange={(e) => updateComponent(r.key, "name", e.target.value)}
-                      placeholder="Ryzen 7 7800X3D"
-                      aria-label="اسم المكون"
-                    />
-                    <Input
-                      value={r.spec}
-                      onChange={(e) => updateComponent(r.key, "spec", e.target.value)}
-                      placeholder="اختياري — 8 نواة"
-                      aria-label="مواصفة المكون"
-                    />
-                    <Input
-                      type="number"
-                      min={1}
-                      dir="ltr"
-                      className="font-tech"
-                      value={r.qty}
-                      onChange={(e) => updateComponent(r.key, "qty", e.target.value)}
-                      aria-label="كمية المكون"
-                    />
-                    <Input
-                      type="number"
-                      min={0}
-                      dir="ltr"
-                      className="font-tech"
-                      value={r.price}
-                      onChange={(e) => updateComponent(r.key, "price", e.target.value)}
-                      placeholder="0"
-                      aria-label="سعر الوحدة للمكون"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeComponent(r.key)}
-                      aria-label="حذف المكون"
-                      className="text-danger hover:bg-danger/10 hover:text-danger"
-                    >
-                      <Trash2 className="h-4 w-4" aria-hidden />
-                    </Button>
+                    <FieldError>{attempted ? errors.title : undefined}</FieldError>
                   </div>
-                ))}
 
-                <FieldError>{attempted ? errors.components : undefined}</FieldError>
-                <div>
-                  <Button type="button" variant="outline" size="sm" onClick={addComponent}>
-                    <Plus className="h-4 w-4" aria-hidden />
-                    إضافة مكون
-                  </Button>
+                  <div className="space-y-1.5">
+                    <Label>النوع</Label>
+                    <Select value={form.type} onValueChange={(v) => setField("type", v as BuildType)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TYPE_OPTIONS.map((t) => (
+                          <SelectItem key={t.value} value={t.value}>
+                            {t.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>حالة التوفر</Label>
+                    <Select
+                      value={form.availability}
+                      onValueChange={(v) => setField("availability", v as ProductAvailability)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {AVAILABILITY_OPTIONS.map((a) => (
+                          <SelectItem key={a.value} value={a.value}>
+                            {a.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="b-desc">الوصف</Label>
+                    <Textarea
+                      id="b-desc"
+                      rows={3}
+                      value={form.description}
+                      onChange={(e) => setField("description", e.target.value)}
+                      placeholder="لمن التجميعة دي؟ وأقوى مميزاتها…"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-hair bg-elevated/40 p-3.5 sm:col-span-2">
+                    <div>
+                      <Label htmlFor="b-featured" className="text-sm font-medium">
+                        تجميعة مميزة
+                      </Label>
+                      <p className="text-[0.68rem] text-faint">تظهر أولًا في صفحة التجميعات</p>
+                    </div>
+                    <Switch
+                      id="b-featured"
+                      checked={form.featured}
+                      onCheckedChange={(v) => setField("featured", v)}
+                      aria-label="تمييز التجميعة"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Images */}
-              <FormSectionTitle icon={ImageIcon}>الصور</FormSectionTitle>
-              <div className="space-y-2">
-                <Label htmlFor="b-images">روابط الصور — سطر لكل رابط</Label>
-                <Textarea
-                  id="b-images"
-                  rows={3}
-                  dir="ltr"
-                  className="font-tech text-xs"
-                  value={form.imagesText}
-                  onChange={(e) => setField("imagesText", e.target.value)}
-                  placeholder={"https://example.com/build-1.jpg\nhttps://example.com/build-2.jpg"}
-                />
-                {parsedImages.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2 pt-1">
-                    <div className="col-span-2 row-span-2 overflow-hidden rounded-lg border border-hair bg-[#0d0f13]">
-                      <img
-                        src={parsedImages[0]}
-                        alt="الصورة الأساسية للتجميعة"
-                        loading="lazy"
-                        className="img-grade h-full min-h-24 w-full object-cover"
+                {/* Total price */}
+                <FormSectionTitle icon={Calculator}>السعر الإجمالي</FormSectionTitle>
+                <div className="space-y-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <div className="flex-1 space-y-1.5">
+                      <Label htmlFor="b-price">السعر الإجمالي (ج.م) *</Label>
+                      <Input
+                        id="b-price"
+                        type="number"
+                        min={0}
+                        dir="ltr"
+                        className="font-tech"
+                        value={form.totalPrice}
+                        onChange={(e) => setField("totalPrice", e.target.value)}
+                        placeholder="45000"
                       />
                     </div>
-                    {parsedImages.slice(1, 5).map((src, i) => (
-                      <div key={`${src}-${i}`} className="overflow-hidden rounded-lg border border-hair bg-[#0d0f13]">
-                        <img
-                          src={src}
-                          alt={`صورة إضافية رقم ${i + 2}`}
-                          loading="lazy"
-                          className="img-grade h-20 w-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Performance */}
-              <FormSectionTitle icon={Gauge}>أداء التجميعة (اختياري)</FormSectionTitle>
-              <div className="space-y-2">
-                <p className="text-[0.68rem] text-faint">
-                  مؤشرات من 100 بتظهر كأشرطة أداء في صفحة التجميعة — اترك الاسم فارغًا لتجاهل
-                  الصف.
-                </p>
-                {form.perf.map((p) => (
-                  <div
-                    key={p.key}
-                    className="grid gap-2 rounded-xl border border-hair p-3 sm:grid-cols-[1fr_auto] sm:items-center"
-                  >
-                    <Input
-                      value={p.label}
-                      onChange={(e) => updatePerf(p.key, { label: e.target.value })}
-                      placeholder="مثال: Gaming"
-                      aria-label="اسم مؤشر الأداء"
-                    />
-                    <div className="flex items-center gap-3">
-                      <div dir="ltr" className="w-36">
-                        <Slider
-                          value={[p.score]}
-                          min={0}
-                          max={100}
-                          step={1}
-                          onValueChange={(v) => updatePerf(p.key, { score: v[0] ?? p.score })}
-                          aria-label="قيمة مؤشر الأداء من 100"
-                        />
-                      </div>
-                      <span className="w-10 text-center font-tech text-sm font-bold text-primary" dir="ltr">
-                        {p.score}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removePerf(p.key)}
-                        aria-label="حذف مؤشر الأداء"
-                        className="text-danger hover:bg-danger/10 hover:text-danger"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                {form.perf.length < 4 && (
-                  <div>
-                    <Button type="button" variant="outline" size="sm" onClick={addPerf}>
-                      <Plus className="h-4 w-4" aria-hidden />
-                      إضافة مؤشر
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={computeFromComponents}
+                      className="min-h-10 shrink-0"
+                    >
+                      <Calculator className="h-4 w-4" aria-hidden />
+                      احسب من المكونات
                     </Button>
                   </div>
-                )}
-              </div>
-            </div>
-          </ScrollArea>
+                  <FieldError>{attempted ? errors.totalPrice : undefined}</FieldError>
+                  <p className="text-[0.68rem] text-faint">
+                    اتركه أو اضبطه يدويًا — زر «احسب من المكونات» يملأ مجموع أسعار المكونات.
+                  </p>
+                </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-hair px-6 py-4">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} disabled={pending}>
-              إلغاء
-            </Button>
-            <Button onClick={submit} disabled={pending || (attempted && invalid)}>
-              {pending ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              ) : (
-                <Plus className="h-4 w-4" aria-hidden />
-              )}
-              {editing ? "حفظ التعديلات" : "إضافة التجميعة"}
-            </Button>
+                {/* Components */}
+                <FormSectionTitle icon={Cpu}>مكونات التجميعة</FormSectionTitle>
+                <div className="space-y-3">
+                  {/* Header labels (desktop) */}
+                  <div className="hidden gap-2 px-1 text-[0.68rem] font-medium text-faint lg:grid lg:grid-cols-[1.2fr_1.5fr_1.1fr_4.5rem_6rem_auto]">
+                    <span>الدور</span>
+                    <span>الاسم *</span>
+                    <span>المواصفة</span>
+                    <span>الكمية</span>
+                    <span>السعر (وحدة)</span>
+                    <span />
+                  </div>
+
+                  {form.components.map((r) => (
+                    <div
+                      key={r.key}
+                      className="rounded-xl border border-hair bg-surface/40 p-3 space-y-2 lg:space-y-0 lg:rounded-none lg:border-x-0 lg:border-t-0 lg:border-b lg:border-hair/60 lg:bg-transparent lg:p-0 lg:pb-2.5 lg:grid lg:grid-cols-[1.2fr_1.5fr_1.1fr_4.5rem_6rem_auto] lg:items-center lg:gap-2"
+                    >
+                      {/* On mobile: row 1 (role + name + delete) */}
+                      <div className="flex items-center gap-2 lg:contents">
+                        <div className="w-1/3 lg:w-auto">
+                          <span className="block text-[0.65rem] font-medium text-muted-foreground lg:hidden mb-1">
+                            الدور
+                          </span>
+                          <Input
+                            value={r.role}
+                            onChange={(e) => updateComponent(r.key, "role", e.target.value)}
+                            placeholder="المعالج"
+                            aria-label="دور المكون"
+                          />
+                        </div>
+                        <div className="flex-1 lg:w-auto">
+                          <span className="block text-[0.65rem] font-medium text-muted-foreground lg:hidden mb-1">
+                            اسم المكون *
+                          </span>
+                          <Input
+                            value={r.name}
+                            onChange={(e) => updateComponent(r.key, "name", e.target.value)}
+                            placeholder="Ryzen 7 7800X3D"
+                            aria-label="اسم المكون"
+                          />
+                        </div>
+                        {/* Mobile delete button placed in row 1 */}
+                        <div className="lg:hidden shrink-0 self-end">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeComponent(r.key)}
+                            aria-label="حذف المكون"
+                            className="h-10 w-10 text-danger hover:bg-danger/10 hover:text-danger"
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Spec */}
+                      <div className="lg:contents">
+                        <span className="block text-[0.65rem] font-medium text-muted-foreground lg:hidden mb-1">
+                          المواصفات
+                        </span>
+                        <Input
+                          value={r.spec}
+                          onChange={(e) => updateComponent(r.key, "spec", e.target.value)}
+                          placeholder="اختياري — 8 نواة"
+                          aria-label="مواصفة المكون"
+                        />
+                      </div>
+
+                      {/* Qty & Price on mobile (grid 2 cols) */}
+                      <div className="grid grid-cols-2 gap-2 lg:contents">
+                        <div>
+                          <span className="block text-[0.65rem] font-medium text-muted-foreground lg:hidden mb-1">
+                            الكمية
+                          </span>
+                          <Input
+                            type="number"
+                            min={1}
+                            dir="ltr"
+                            className="font-tech"
+                            value={r.qty}
+                            onChange={(e) => updateComponent(r.key, "qty", e.target.value)}
+                            aria-label="كمية المكون"
+                          />
+                        </div>
+                        <div>
+                          <span className="block text-[0.65rem] font-medium text-muted-foreground lg:hidden mb-1">
+                            السعر (ج.م)
+                          </span>
+                          <Input
+                            type="number"
+                            min={0}
+                            dir="ltr"
+                            className="font-tech"
+                            value={r.price}
+                            onChange={(e) => updateComponent(r.key, "price", e.target.value)}
+                            placeholder="0"
+                            aria-label="سعر الوحدة للمكون"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Desktop delete button */}
+                      <div className="hidden lg:block">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeComponent(r.key)}
+                          aria-label="حذف المكون"
+                          className="text-danger hover:bg-danger/10 hover:text-danger"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <FieldError>{attempted ? errors.components : undefined}</FieldError>
+                  <div>
+                    <Button type="button" variant="outline" size="sm" onClick={addComponent} className="min-h-9">
+                      <Plus className="h-4 w-4" aria-hidden />
+                      إضافة مكون
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Images */}
+                <FormSectionTitle icon={ImageIcon}>الصور</FormSectionTitle>
+                <div className="space-y-2">
+                  <Label htmlFor="b-images">روابط الصور — سطر لكل رابط</Label>
+                  <Textarea
+                    id="b-images"
+                    rows={3}
+                    dir="ltr"
+                    className="font-tech text-xs"
+                    value={form.imagesText}
+                    onChange={(e) => setField("imagesText", e.target.value)}
+                    placeholder={"https://example.com/build-1.jpg\nhttps://example.com/build-2.jpg"}
+                  />
+                  {parsedImages.length > 0 && (
+                    <div className="grid grid-cols-4 gap-2 pt-1">
+                      <div className="col-span-2 row-span-2 overflow-hidden rounded-lg border border-hair bg-[#0d0f13]">
+                        <img
+                          src={parsedImages[0]}
+                          alt="الصورة الأساسية للتجميعة"
+                          loading="lazy"
+                          className="img-grade h-full min-h-24 w-full object-cover"
+                        />
+                      </div>
+                      {parsedImages.slice(1, 5).map((src, i) => (
+                        <div key={`${src}-${i}`} className="overflow-hidden rounded-lg border border-hair bg-[#0d0f13]">
+                          <img
+                            src={src}
+                            alt={`صورة إضافية رقم ${i + 2}`}
+                            loading="lazy"
+                            className="img-grade h-20 w-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Performance */}
+                <FormSectionTitle icon={Gauge}>أداء التجميعة (اختياري)</FormSectionTitle>
+                <div className="space-y-3">
+                  <p className="text-[0.68rem] text-faint">
+                    مؤشرات من 100 بتظهر كأشرطة أداء في صفحة التجميعة — اترك الاسم فارغًا لتجاهل
+                    الصف.
+                  </p>
+                  {form.perf.map((p) => (
+                    <div
+                      key={p.key}
+                      className="flex flex-col gap-2.5 rounded-xl border border-hair bg-surface/30 p-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex-1">
+                        <Input
+                          value={p.label}
+                          onChange={(e) => updatePerf(p.key, { label: e.target.value })}
+                          placeholder="مثال: Gaming"
+                          aria-label="اسم مؤشر الأداء"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div dir="ltr" className="flex-1 sm:w-36">
+                          <Slider
+                            value={[p.score]}
+                            min={0}
+                            max={100}
+                            step={1}
+                            onValueChange={(v) => updatePerf(p.key, { score: v[0] ?? p.score })}
+                            aria-label="قيمة مؤشر الأداء من 100"
+                          />
+                        </div>
+                        <span className="w-10 text-center font-tech text-sm font-bold text-primary" dir="ltr">
+                          {p.score}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removePerf(p.key)}
+                          aria-label="حذف مؤشر الأداء"
+                          className="h-9 w-9 shrink-0 text-danger hover:bg-danger/10 hover:text-danger"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  {form.perf.length < 4 && (
+                    <div>
+                      <Button type="button" variant="outline" size="sm" onClick={addPerf} className="min-h-9">
+                        <Plus className="h-4 w-4" aria-hidden />
+                        إضافة مؤشر
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Sticky Footer */}
+              <div className="sticky bottom-0 z-10 flex shrink-0 items-center justify-end gap-2 border-t border-hair bg-elevated/95 px-4 py-3.5 sm:px-6 backdrop-blur-md">
+                <Button variant="ghost" onClick={() => setDialogOpen(false)} disabled={pending} className="min-h-10 px-4">
+                  إلغاء
+                </Button>
+                <Button onClick={submit} disabled={pending || (attempted && invalid)} className="min-h-10 px-5 glow-accent-sm">
+                  {pending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  ) : (
+                    <Plus className="h-4 w-4" aria-hidden />
+                  )}
+                  {editing ? "حفظ التعديلات" : "إضافة التجميعة"}
+                </Button>
+              </div>
+            </DialogPrimitive.Content>
           </div>
-        </DialogContent>
+        </DialogPortal>
       </Dialog>
 
       {/* --------------------------- Delete confirmation --------------------------- */}

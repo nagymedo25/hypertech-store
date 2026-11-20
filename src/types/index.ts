@@ -49,6 +49,11 @@ export interface Product {
   rating: number;
   specs: SpecItem[];
   specLayout: SpecLayout;
+  baseRam?: string;
+  baseStorage?: string;
+  allowRamUpgrade?: boolean;
+  allowStorageUpgrade?: boolean;
+  customHardwarePricing?: Record<string, any> | null;
   createdAt: string;
 }
 
@@ -109,6 +114,11 @@ export interface PCBuild {
 export interface CartItem {
   productId: string;
   qty: number;
+  selectedRam?: string;
+  selectedStorage?: string;
+  ramUpgradePrice?: number;
+  storageUpgradePrice?: number;
+  unitPrice?: number;
 }
 
 export interface CustomerInfo {
@@ -126,6 +136,10 @@ export interface OrderLine {
   name: string;
   qty: number;
   price: number;
+  selectedRam?: string;
+  selectedStorage?: string;
+  ramUpgradePrice?: number;
+  storageUpgradePrice?: number;
 }
 
 export interface OrderRecord {
@@ -135,6 +149,8 @@ export interface OrderRecord {
   customerPhone: string;
   items: OrderLine[];
   total: number;
+  couponCode?: string;
+  discountAmount?: number;
   createdAt: string;
   status: OrderStatus;
   notes?: string;
@@ -203,4 +219,59 @@ export interface ProductFilter {
   /** Filter by exact brand name (e.g. "ASUS") */
   brand?: string;
   sort?: "newest" | "price-asc" | "price-desc" | "featured";
+}
+
+/* ----------------- Hardware Upgrades & Customization ----------------- */
+
+export type HardwareComponentType = "ram" | "storage";
+
+export interface HardwareUpgradeRate {
+  id: string;
+  componentType: HardwareComponentType;
+  label: string;
+  capacityGb?: number | null;
+  priceDelta: number;
+  order: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* -------------------------- Discount Codes -------------------------- */
+
+export type DiscountType = "percentage" | "fixed_amount";
+
+export interface DiscountCode {
+  id: string;
+  code: string;
+  discountType: DiscountType;
+  discountValue: number;
+  minOrderAmount?: number | null;
+  maxDiscountAmount?: number | null;
+  usageLimit?: number | null;
+  usedCount: number;
+  expiresAt?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/* ------------------- CMS & Dynamic Site Content ------------------- */
+
+export interface SiteContent {
+  id: string;
+  data: Record<string, any>;
+  updatedAt: string;
+}
+
+/* --------------------------- Security & Admin ------------------------ */
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  email?: string | null;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string | null;
 }

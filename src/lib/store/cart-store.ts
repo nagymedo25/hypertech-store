@@ -16,6 +16,9 @@
  * the panel survives navigation, scrolling and full page refresh.
  * The custom `merge` below rehydrates OLD persisted carts (saved
  * before these fields existed) with safe closed-panel defaults.
+ *
+ * Hardware variants: Cart items with different configurations
+ * (selectedRam / selectedStorage) are treated as distinct line items.
  * ============================================================
  */
 
@@ -28,7 +31,29 @@ export interface LastAdded {
   productId: string;
   qty: number;
   at: number;
+  selectedRam?: string;
+  selectedStorage?: string;
+  unitPrice?: number;
 }
+
+export interface AddToCartOptions {
+  qty?: number;
+  selectedRam?: string;
+  selectedStorage?: string;
+  ramUpgradePrice?: number;
+  storageUpgradePrice?: number;
+  unitPrice?: number;
+}
+
+const matchItem = (
+  item: CartItem,
+  productId: string,
+  selectedRam?: string,
+  selectedStorage?: string
+) =>
+  item.productId === productId &&
+  (item.selectedRam || "") === (selectedRam || "") &&
+  (item.selectedStorage || "") === (selectedStorage || "");
 
 interface CartState {
   items: CartItem[];
@@ -38,12 +63,21 @@ interface CartState {
   panelOpen: boolean;
   /** هل تم فتح السلة والاطلاع على عناصرها؟ عند الإضافة تصبح false لإظهار العداد */
   cartViewed: boolean;
-  add: (productId: string, qty?: number) => void;
-  remove: (productId: string) => void;
-  setQty: (productId: string, qty: number) => void;
+  add: (
+    productId: string,
+    qtyOrOptions?: number | AddToCartOptions,
+    maybeOptions?: AddToCartOptions
+  ) => void;
+  remove: (productId: string, selectedRam?: string, selectedStorage?: string) => void;
+  setQty: (
+    productId: string,
+    qty: number,
+    selectedRam?: string,
+    selectedStorage?: string
+  ) => void;
   clear: () => void;
   /** Mark a fresh add → sets lastAdded and opens (or re-triggers) the bottom panel */
-  markAdded: (productId: string, qty: number) => void;
+  markAdded: (productId: string, qty: number, options?: AddToCartOptions) => void;
   setPanelOpen: (v: boolean) => void;
   markCartViewed: () => void;
 }
@@ -55,34 +89,91 @@ export const useCartStore = create<CartState>()(
       lastAdded: null,
       panelOpen: false,
       cartViewed: false,
-      add: (productId, qty = 1) =>
+      add: (productId, qtyOrOptions = 1, maybeOptions) =>
         set((s) => {
-          const existing = s.items.find((i) => i.productId === productId);
-          if (existing) {
+          let qty = 1;
+          let opts: AddToCartOptions = {};
+
+          if (typeof qtyOrOptions === "number") {
+            qty = qtyOrOptions;
+            opts = maybeOptions ?? {};
+          } else if (typeof qtyOrOptions === "object" && qtyOrOptions !== null) {
+            qty = qtyOrOptions.qty ?? 1;
+            opts = qtyOrOptions;
+          }
+
+          const selectedRam = opts.selectedRam;
+          const selectedStorage = opts.selectedStorage;
+          const ramUpgradePrice = opts.ramUpgradePrice;
+          const storageUpgradePrice = opts.storageUpgradePrice;
+          const unitPrice = opts.unitPrice;
+
+          const existingIdx = s.items.findIndex((i) =>
+            matchItem(i, productId, selectedRam, selectedStorage)
+          );
+
+          if (existingIdx >= 0) {
+            const updated = [...s.items];
+            updated[existingIdx] = {
+              ...updated[existingIdx],
+              qty: Math.min(99, updated[existingIdx].qty + qty),
+              unitPrice: unitPrice ?? updated[existingIdx].unitPrice,
+              ramUpgradePrice: ramUpgradePrice ?? updated[existingIdx].ramUpgradePrice,
+              storageUpgradePrice:
+                storageUpgradePrice ?? updated[existingIdx].storageUpgradePrice,
+            };
             return {
               cartViewed: false,
-              items: s.items.map((i) =>
-                i.productId === productId ? { ...i, qty: Math.min(99, i.qty + qty) } : i
-              ),
+              items: updated,
             };
           }
-          return { cartViewed: false, items: [...s.items, { productId, qty }] };
+
+          return {
+            cartViewed: false,
+            items: [
+              ...s.items,
+              {
+                productId,
+                qty,
+                selectedRam,
+                selectedStorage,
+                ramUpgradePrice,
+                storageUpgradePrice,
+                unitPrice,
+              },
+            ],
+          };
         }),
-      remove: (productId) =>
-        set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
-      setQty: (productId, qty) =>
+      remove: (productId, selectedRam, selectedStorage) =>
+        set((s) => ({
+          items: s.items.filter((i) => !matchItem(i, productId, selectedRam, selectedStorage)),
+        })),
+      setQty: (productId, qty, selectedRam, selectedStorage) =>
         set((s) => ({
           items:
             qty <= 0
-              ? s.items.filter((i) => i.productId !== productId)
+              ? s.items.filter((i) => !matchItem(i, productId, selectedRam, selectedStorage))
               : s.items.map((i) =>
-                  i.productId === productId ? { ...i, qty: Math.min(99, qty) } : i
+                  matchItem(i, productId, selectedRam, selectedStorage)
+                    ? { ...i, qty: Math.min(99, qty) }
+                    : i
                 ),
         })),
       /* إتمام الطلب/تفريغ السلة → اللوحة لا يجوز أن تبقى ظاهرة وتعتبر السلة مقروءة */
       clear: () => set({ items: [], lastAdded: null, panelOpen: false, cartViewed: true }),
-      markAdded: (productId, qty) =>
-        set({ lastAdded: { productId, qty, at: Date.now() }, panelOpen: true, cartViewed: false }),
+      markAdded: (productId, qty, options) =>
+        set({
+          lastAdded: {
+            productId,
+            qty,
+            at: Date.now(),
+            selectedRam: options?.selectedRam,
+            selectedStorage: options?.selectedStorage,
+            unitPrice: options?.unitPrice,
+          },
+          panelOpen: true,
+          cartViewed: false,
+        }),
       setPanelOpen: (v) => set({ panelOpen: v }),
       markCartViewed: () => set({ cartViewed: true }),
     }),
@@ -94,7 +185,14 @@ export const useCartStore = create<CartState>()(
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as {
           items?: unknown;
-          lastAdded?: { productId?: unknown; qty?: unknown; at?: unknown };
+          lastAdded?: {
+            productId?: unknown;
+            qty?: unknown;
+            at?: unknown;
+            selectedRam?: unknown;
+            selectedStorage?: unknown;
+            unitPrice?: unknown;
+          };
           panelOpen?: unknown;
           cartViewed?: unknown;
         };
@@ -105,6 +203,10 @@ export const useCartStore = create<CartState>()(
                 productId: raw.productId,
                 qty: typeof raw.qty === "number" ? raw.qty : 1,
                 at: typeof raw.at === "number" ? raw.at : Date.now(),
+                selectedRam: typeof raw.selectedRam === "string" ? raw.selectedRam : undefined,
+                selectedStorage:
+                  typeof raw.selectedStorage === "string" ? raw.selectedStorage : undefined,
+                unitPrice: typeof raw.unitPrice === "number" ? raw.unitPrice : undefined,
               }
             : null;
         return {

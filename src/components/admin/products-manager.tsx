@@ -15,12 +15,15 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  Cpu,
+  HardDrive,
   Image as ImageIcon,
   Loader2,
   ListTree,
   Package,
   Pencil,
   Plus,
+  SlidersHorizontal,
   Sparkles,
   Star,
   Trash2,
@@ -98,6 +101,11 @@ interface ProductForm {
   images: string[];
   specs: SpecRow[];
   specLayout: SpecLayout;
+  baseRam: string;
+  baseStorage: string;
+  allowRamUpgrade: boolean;
+  allowStorageUpgrade: boolean;
+  customHardwarePricing: Record<string, number>;
 }
 
 const rowId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -118,6 +126,11 @@ const EMPTY_FORM: ProductForm = {
   images: [],
   specs: [],
   specLayout: "device",
+  baseRam: "",
+  baseStorage: "",
+  allowRamUpgrade: false,
+  allowStorageUpgrade: false,
+  customHardwarePricing: {},
 };
 
 type ProductErrors = Partial<
@@ -171,6 +184,7 @@ const SPEC_LAYOUTS: { value: SpecLayout; label: string; hint: string }[] = [
 export default function ProductsManager() {
   const products = useMockDB((s) => s.products);
   const categories = useMockDB((s) => s.categories);
+  const hardwareUpgradeRates = useMockDB((s) => s.hardwareUpgradeRates);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -221,6 +235,11 @@ export default function ProductsManager() {
       images: [...p.images],
       specs: p.specs.map((s) => ({ key: rowId(), label: s.label, value: s.value })),
       specLayout: p.specLayout,
+      baseRam: p.baseRam ?? "",
+      baseStorage: p.baseStorage ?? "",
+      allowRamUpgrade: p.allowRamUpgrade ?? false,
+      allowStorageUpgrade: p.allowStorageUpgrade ?? false,
+      customHardwarePricing: (p.customHardwarePricing as Record<string, number>) ?? {},
     });
     setAttempted(false);
     setDialogOpen(true);
@@ -242,6 +261,21 @@ export default function ProductsManager() {
 
   const removeSpec = (key: string) =>
     setForm((f) => ({ ...f, specs: f.specs.filter((r) => r.key !== key) }));
+
+  const setCustomPrice = (tierLabel: string, priceStr: string) => {
+    setForm((f) => {
+      const copy = { ...f.customHardwarePricing };
+      if (priceStr.trim() === "") {
+        delete copy[tierLabel];
+      } else {
+        const num = parseFloat(priceStr);
+        if (!isNaN(num) && num >= 0) {
+          copy[tierLabel] = num;
+        }
+      }
+      return { ...f, customHardwarePricing: copy };
+    });
+  };
 
   /* --------------------------------- Submit -------------------------------- */
 
@@ -276,6 +310,12 @@ export default function ProductsManager() {
         specs,
         specLayout: form.specLayout,
         rating: editing?.rating ?? 0,
+        baseRam: form.baseRam.trim() || undefined,
+        baseStorage: form.baseStorage.trim() || undefined,
+        allowRamUpgrade: form.allowRamUpgrade,
+        allowStorageUpgrade: form.allowStorageUpgrade,
+        customHardwarePricing:
+          Object.keys(form.customHardwarePricing).length > 0 ? form.customHardwarePricing : undefined,
       };
 
       if (editing) {
@@ -606,7 +646,14 @@ export default function ProductsManager() {
                     <SelectContent>
                       {sortedCategories.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
-                          {c.name}
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="h-2 w-2 rounded-full shrink-0"
+                              style={{ backgroundColor: c.accent || "#0284c7" }}
+                              aria-hidden
+                            />
+                            <span>{c.name}</span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -743,6 +790,159 @@ export default function ProductsManager() {
                     aria-label="وسم جديد للمنتج"
                   />
                 </div>
+              </div>
+
+              {/* Hardware Upgrades */}
+              <FormSectionTitle icon={Cpu}>ترقيات العتاد والقطع (RAM & Storage)</FormSectionTitle>
+              <div className="space-y-4 rounded-xl border border-hair bg-elevated/30 p-4">
+                <p className="text-xs text-muted-foreground">
+                  مخصص للابتوبات والأجهزة: يسمح للعميل باختيار سعة الرام والتخزين وتحديث السعر تلقائياً أثناء الشراء.
+                </p>
+
+                {/* Toggles */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-hair bg-panel/70 p-3">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="p-allow-ram" className="text-sm font-medium flex items-center gap-1.5">
+                        <Cpu className="h-4 w-4 text-brand-blue" />
+                        تفعيل ترقية الرام (RAM)
+                      </Label>
+                      <p className="text-[10px] text-faint">إتاحة خيارات زيادة الرام بالمتجر</p>
+                    </div>
+                    <Switch
+                      id="p-allow-ram"
+                      checked={form.allowRamUpgrade}
+                      onCheckedChange={(v) => setField("allowRamUpgrade", v)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 rounded-lg border border-hair bg-panel/70 p-3">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="p-allow-storage" className="text-sm font-medium flex items-center gap-1.5">
+                        <HardDrive className="h-4 w-4 text-brand-cyan" />
+                        تفعيل ترقية التخزين (SSD)
+                      </Label>
+                      <p className="text-[10px] text-faint">إتاحة خيارات زيادة الـ SSD بالمتجر</p>
+                    </div>
+                    <Switch
+                      id="p-allow-storage"
+                      checked={form.allowStorageUpgrade}
+                      onCheckedChange={(v) => setField("allowStorageUpgrade", v)}
+                    />
+                  </div>
+                </div>
+
+                {/* Base specs */}
+                {(form.allowRamUpgrade || form.allowStorageUpgrade) && (
+                  <div className="space-y-4 pt-2 border-t border-hair/60">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="p-base-ram">الرام الأساسي (المضمن بالسعر)</Label>
+                        <Input
+                          id="p-base-ram"
+                          value={form.baseRam}
+                          onChange={(e) => setField("baseRam", e.target.value)}
+                          placeholder="مثال: 8GB أو 16GB"
+                          dir="ltr"
+                          className="font-tech text-right"
+                        />
+                        <p className="text-[10px] text-faint">هذا الخيار يكون سعره الإضافي 0 ج.م</p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="p-base-storage">التخزين الأساسي (المضمن بالسعر)</Label>
+                        <Input
+                          id="p-base-storage"
+                          value={form.baseStorage}
+                          onChange={(e) => setField("baseStorage", e.target.value)}
+                          placeholder="مثال: 512GB SSD أو 1TB SSD"
+                          dir="ltr"
+                          className="font-tech text-right"
+                        />
+                        <p className="text-[10px] text-faint">هذا الخيار يكون سعره الإضافي 0 ج.م</p>
+                      </div>
+                    </div>
+
+                    {/* Custom Pricing Overrides */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                        <SlidersHorizontal className="h-3.5 w-3.5 text-brand-blue" />
+                        تخصيص أسعار الترقية لهذا المنتج (اختياري)
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        إذا تُرِك الحقل فارغاً، سيتم اعتماد السعر العام التلقائي المحدد في إعدادات أسعار الترقية.
+                      </p>
+
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {form.allowRamUpgrade && (
+                          <div className="space-y-1.5">
+                            <span className="text-[11px] font-bold text-brand-blue">خيارات الرام (RAM):</span>
+                            {hardwareUpgradeRates
+                              .filter((r) => r.componentType === "ram" && r.active)
+                              .map((rate) => {
+                                const currentOverride = form.customHardwarePricing[rate.label];
+                                return (
+                                  <div
+                                    key={rate.id}
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-hair bg-panel/50 px-3 py-1.5 text-xs"
+                                  >
+                                    <span className="font-tech font-medium">{rate.label}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] text-faint font-tech">
+                                        العام: +{rate.priceDelta} ج.م
+                                      </span>
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        placeholder={String(rate.priceDelta)}
+                                        value={currentOverride !== undefined ? String(currentOverride) : ""}
+                                        onChange={(e) => setCustomPrice(rate.label, e.target.value)}
+                                        className="h-7 w-24 text-left font-tech text-xs"
+                                        dir="ltr"
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+
+                        {form.allowStorageUpgrade && (
+                          <div className="space-y-1.5 pt-2">
+                            <span className="text-[11px] font-bold text-brand-cyan">خيارات التخزين (SSD):</span>
+                            {hardwareUpgradeRates
+                              .filter((r) => r.componentType === "storage" && r.active)
+                              .map((rate) => {
+                                const currentOverride = form.customHardwarePricing[rate.label];
+                                return (
+                                  <div
+                                    key={rate.id}
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-hair bg-panel/50 px-3 py-1.5 text-xs"
+                                  >
+                                    <span className="font-tech font-medium">{rate.label}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[10px] text-faint font-tech">
+                                        العام: +{rate.priceDelta} ج.م
+                                      </span>
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        placeholder={String(rate.priceDelta)}
+                                        value={currentOverride !== undefined ? String(currentOverride) : ""}
+                                        onChange={(e) => setCustomPrice(rate.label, e.target.value)}
+                                        className="h-7 w-24 text-left font-tech text-xs"
+                                        dir="ltr"
+                                      />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Images — signed direct upload to Cloudinary + URL paste */}

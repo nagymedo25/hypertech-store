@@ -4,6 +4,7 @@
  * ============================================================
  */
 
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { badRequest, json, notFound, readJson, serverError, unauthorized } from "@/lib/server/http";
 import { requireAdmin } from "@/lib/server/auth";
@@ -48,6 +49,17 @@ export async function PATCH(req: Request, ctx: Ctx) {
         ...(input.specs !== undefined ? { specs: input.specs } : {}),
         ...(input.specLayout !== undefined ? { specLayout: input.specLayout } : {}),
         ...(input.heroEligible !== undefined ? { heroEligible: input.heroEligible } : {}),
+        ...(input.baseRam !== undefined ? { baseRam: input.baseRam ?? null } : {}),
+        ...(input.baseStorage !== undefined ? { baseStorage: input.baseStorage ?? null } : {}),
+        ...(input.allowRamUpgrade !== undefined ? { allowRamUpgrade: input.allowRamUpgrade } : {}),
+        ...(input.allowStorageUpgrade !== undefined ? { allowStorageUpgrade: input.allowStorageUpgrade } : {}),
+        ...(input.customHardwarePricing !== undefined
+          ? {
+              customHardwarePricing: input.customHardwarePricing
+                ? (input.customHardwarePricing as Prisma.InputJsonValue)
+                : Prisma.JsonNull,
+            }
+          : {}),
       },
     });
 

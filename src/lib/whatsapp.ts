@@ -18,16 +18,24 @@ const LINE = "────────────────────";
 /* -------------------------- Order message --------------------------- */
 
 export interface OrderMessageInput {
-  items: (CartItem & { product: Product })[];
+  items: (CartItem & { product: Product; unitPrice?: number })[];
   subtotal: number;
   customer: CustomerInfo;
+  couponCode?: string;
+  discountAmount?: number;
 }
 
 /**
  * Builds the professional Arabic order message sent to the store's
  * WhatsApp when a customer completes the cart checkout.
  */
-export function buildOrderMessage({ items, subtotal, customer }: OrderMessageInput): string {
+export function buildOrderMessage({
+  items,
+  subtotal,
+  customer,
+  couponCode,
+  discountAmount = 0,
+}: OrderMessageInput): string {
   const lines: string[] = [];
 
   lines.push("🛒 *طلب جديد — هايبر تك*");
@@ -36,17 +44,32 @@ export function buildOrderMessage({ items, subtotal, customer }: OrderMessageInp
   lines.push("");
   lines.push("*المنتجات المطلوبة:*");
   items.forEach((entry, i) => {
-    const { product, qty } = entry;
-    const total = product.price * qty;
+    const { product, qty, selectedRam, selectedStorage, unitPrice } = entry;
+    const effectivePrice =
+      unitPrice ??
+      (product.price + (entry.ramUpgradePrice ?? 0) + (entry.storageUpgradePrice ?? 0));
+    const total = effectivePrice * qty;
+    lines.push(`${i + 1}. ${product.name}`);
+    if (selectedRam || selectedStorage) {
+      const parts: string[] = [];
+      if (selectedRam) parts.push(`الرام: ${selectedRam}`);
+      if (selectedStorage) parts.push(`التخزين: ${selectedStorage}`);
+      lines.push(`   ⚙️ المواصفات المختارة: ${parts.join(" | ")}`);
+    }
     lines.push(
-      `${i + 1}. ${product.name}`,
-      `   الكمية: ${qty} × ${formatPrice(product.price)} = ${formatPrice(total)}`
+      `   الكمية: ${qty} × ${formatPrice(effectivePrice)} = ${formatPrice(total)}`
     );
   });
 
   lines.push("");
   lines.push(LINE);
-  lines.push(`*الإجمالي: ${formatPrice(subtotal)}*`);
+  if (discountAmount && discountAmount > 0) {
+    lines.push(`المجموع: ${formatPrice(subtotal)}`);
+    lines.push(`كوبون الخصم: ${couponCode || ""} (-${formatPrice(discountAmount)})`);
+    lines.push(`*الإجمالي النهائي بعد الخصم: ${formatPrice(Math.max(0, subtotal - discountAmount))}*`);
+  } else {
+    lines.push(`*الإجمالي: ${formatPrice(subtotal)}*`);
+  }
 
   lines.push("");
   lines.push("*بيانات العميل:*");
@@ -69,22 +92,37 @@ export function orderWhatsAppUrl(input: OrderMessageInput): string {
 
 /* --------------------- Single product quick order -------------------- */
 
-export function buildProductMessage(product: Product, qty = 1): string {
+export function buildProductMessage(
+  product: Product,
+  qty = 1,
+  config?: { selectedRam?: string; selectedStorage?: string; unitPrice?: number }
+): string {
   const lines: string[] = [];
   lines.push("⚡ *استفسار عن منتج — هايبر تك*");
   lines.push(LINE);
   lines.push("");
   lines.push(`🏷️ *${product.name}*`);
   if (product.brand) lines.push(`الماركة: ${product.brand}`);
+  if (config?.selectedRam || config?.selectedStorage) {
+    const parts: string[] = [];
+    if (config.selectedRam) parts.push(`الرام: ${config.selectedRam}`);
+    if (config.selectedStorage) parts.push(`التخزين: ${config.selectedStorage}`);
+    lines.push(`المواصفات المختارة: ${parts.join(" | ")}`);
+  }
+  const price = config?.unitPrice ?? product.price;
   lines.push(`الكمية: ${qty}`);
-  lines.push(`السعر: ${formatPrice(product.price)}${qty > 1 ? ` × ${qty}` : ""}`);
+  lines.push(`السعر: ${formatPrice(price)}${qty > 1 ? ` × ${qty}` : ""}`);
   lines.push("");
   lines.push("مهتم بشراء المنتج ده، ينفع تفاصيل أكتر عن التوفر والدفع؟");
   return lines.join("\n");
 }
 
-export function productWhatsAppUrl(product: Product, qty = 1): string {
-  return whatsappUrl(buildProductMessage(product, qty));
+export function productWhatsAppUrl(
+  product: Product,
+  qty = 1,
+  config?: { selectedRam?: string; selectedStorage?: string; unitPrice?: number }
+): string {
+  return whatsappUrl(buildProductMessage(product, qty, config));
 }
 
 /* -------------------------- Build inquiry ---------------------------- */

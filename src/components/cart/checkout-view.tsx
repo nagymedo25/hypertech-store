@@ -15,7 +15,18 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { MessageCircle, ChevronLeft, User, Phone, FileCheck2, PencilLine, ShieldCheck } from "lucide-react";
+import {
+  MessageCircle,
+  ChevronLeft,
+  User,
+  Phone,
+  FileCheck2,
+  PencilLine,
+  ShieldCheck,
+  Tag,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { ViewHeader } from "@/components/layout/view-header";
 import { Reveal } from "@/components/motion/reveal";
 import { AnimatedNumber } from "@/components/motion/micro-interactions";
@@ -47,6 +58,17 @@ export default function CheckoutView() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
+  /* Coupon State */
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: "percentage" | "fixed_amount";
+    discountValue: number;
+    discountAmount: number;
+  } | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
   const rows = useMemo(
     () =>
       items
@@ -55,8 +77,48 @@ export default function CheckoutView() {
     [items, products]
   );
 
-  const subtotal = rows.reduce((acc, r) => acc + r.product.price * r.qty, 0);
+  const getEffectivePrice = (r: (typeof rows)[number]) =>
+    r.unitPrice ?? (r.product.price + (r.ramUpgradePrice ?? 0) + (r.storageUpgradePrice ?? 0));
+
+  const subtotal = rows.reduce((acc, r) => acc + getEffectivePrice(r) * r.qty, 0);
+  const discountAmount = appliedCoupon ? Math.min(appliedCoupon.discountAmount, subtotal) : 0;
+  const finalTotal = Math.max(0, subtotal - discountAmount);
   const count = rows.reduce((acc, r) => acc + r.qty, 0);
+
+  const handleApplyCoupon = async () => {
+    const clean = couponInput.trim().toUpperCase();
+    if (!clean) {
+      setCouponError("يرجى إدخال كود الخصم");
+      return;
+    }
+    setValidatingCoupon(true);
+    setCouponError(null);
+    try {
+      const res = await repositories.coupons.validate(clean, subtotal);
+      setAppliedCoupon({
+        code: res.code,
+        discountType: res.discountType,
+        discountValue: res.discountValue,
+        discountAmount: res.discountAmount,
+      });
+      toast.success(res.message, {
+        description: `تم توفير ${formatPrice(res.discountAmount)} على طلبك.`,
+      });
+    } catch (err: any) {
+      const msg = err?.message || "كود الخصم غير صحيح أو غير متاح";
+      setCouponError(msg);
+      toast.error("تعذر تطبيق الكوبون", { description: msg });
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+    toast.info("تمت إزالة كود الخصم");
+  };
 
   const {
     register,
@@ -107,7 +169,15 @@ export default function CheckoutView() {
         customerName: preview.name,
         customerPhone: preview.phone,
         notes: preview.notes || undefined,
-        items: rows.map((r) => ({ productId: r.product.id, qty: r.qty })),
+        couponCode: appliedCoupon?.code,
+        items: rows.map((r) => ({
+          productId: r.product.id,
+          qty: r.qty,
+          selectedRam: r.selectedRam,
+          selectedStorage: r.selectedStorage,
+          ramUpgradePrice: r.ramUpgradePrice,
+          storageUpgradePrice: r.storageUpgradePrice,
+        })),
       });
 
       // Open WhatsApp with the organized order message
@@ -115,6 +185,8 @@ export default function CheckoutView() {
         orderWhatsAppUrl({
           items: rows,
           subtotal,
+          couponCode: appliedCoupon?.code,
+          discountAmount,
           customer: { name: preview.name, phone: preview.phone, notes: preview.notes || undefined },
         }),
         "_blank",
@@ -245,34 +317,138 @@ export default function CheckoutView() {
               <h2 className="mb-5 font-display text-lg font-bold">طلبك ({count} منتج)</h2>
 
               <ul className="max-h-72 space-y-3.5 overflow-y-auto pl-1" aria-label="عناصر الطلب">
-                {rows.map((r) => (
-                  <li key={r.productId} className="flex items-center gap-3">
+                {rows.map((r) => {
+                  const unitPrice = getEffectivePrice(r);
+                  const rowKey = `${r.productId}-${r.selectedRam || "base"}-${r.selectedStorage || "base"}`;
+                  return (
+                  <li key={rowKey} className="flex items-center gap-3">
                     <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-hair bg-[#0d0f13]">
-                      { }
                       <img src={r.product.images[0]} alt="" className="h-full w-full object-cover img-grade" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-xs font-bold">{r.product.name}</span>
+                      {(r.selectedRam || r.selectedStorage) && (
+                        <span className="flex flex-wrap items-center gap-1 text-[10px] text-brand-cyan">
+                          {r.selectedRam && <span>{r.selectedRam}</span>}
+                          {r.selectedRam && r.selectedStorage && <span>•</span>}
+                          {r.selectedStorage && <span>{r.selectedStorage}</span>}
+                        </span>
+                      )}
                       <span className="text-[0.68rem] text-faint">
-                        {r.qty} × {formatPriceCompact(r.product.price)}
+                        {r.qty} × {formatPriceCompact(unitPrice)}
                       </span>
                     </span>
                     <span className="font-tech text-sm font-bold tabular-nums" dir="rtl">
-                      {formatPriceCompact(r.product.price * r.qty)}
+                      {formatPriceCompact(unitPrice * r.qty)}
                     </span>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
+
+              {/* Promo code field */}
+              <div className="my-5 border-t border-hair pt-4">
+                {!appliedCoupon ? (
+                  <div>
+                    <label className="mb-2 flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
+                      <Tag className="h-3.5 w-3.5 text-primary" />
+                      كود الخصم (Promo Code)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={(e) => {
+                          setCouponInput(e.target.value.toUpperCase());
+                          if (couponError) setCouponError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleApplyCoupon();
+                          }
+                        }}
+                        placeholder="أدخل كود الخصم"
+                        dir="ltr"
+                        className="w-full rounded-xl border border-hair bg-raised px-3.5 py-2.5 font-mono text-xs font-bold uppercase placeholder:font-sans placeholder:normal-case placeholder:text-faint focus:border-primary/60 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={validatingCoupon || !couponInput.trim()}
+                        className="glow-accent-sm shrink-0 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
+                      >
+                        {validatingCoupon ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          "تطبيق"
+                        )}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="mt-2 flex items-center gap-1.5 text-xs text-danger" role="alert">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                        {couponError}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-xl border border-mint/30 bg-mint/10 p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-lg bg-mint/20 p-1.5 text-mint">
+                        <Tag className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <span className="font-mono text-xs font-extrabold text-mint tracking-wider">
+                          {appliedCoupon.code}
+                        </span>
+                        <span className="mr-2 text-[0.7rem] text-mint/80 font-semibold">
+                          (وفرت {formatPriceCompact(discountAmount)} ج.م)
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="rounded-lg px-2 py-1 text-xs font-bold text-danger hover:bg-danger/10 transition-colors"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <div className="my-5 hairline-x" />
 
-              <div className="flex items-center justify-between">
-                <span className="font-display text-base font-bold">الإجمالي</span>
-                <span className="font-tech text-2xl font-bold text-primary" dir="rtl">
-                  <AnimatedNumber value={subtotal} format={(n) => formatPriceCompact(n)} />
-                  <span className="mr-1.5 text-sm font-medium text-muted-foreground">ج.م</span>
-                </span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>المجموع الفرعي</span>
+                  <span className="font-tech font-bold text-foreground" dir="rtl">
+                    {formatPriceCompact(subtotal)} ج.م
+                  </span>
+                </div>
+
+                {discountAmount > 0 && (
+                  <div className="flex items-center justify-between text-xs font-bold text-mint">
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-3.5 w-3.5" />
+                      الخصم ({appliedCoupon?.code})
+                    </span>
+                    <span className="font-tech" dir="rtl">
+                      - {formatPriceCompact(discountAmount)} ج.م
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2 border-t border-hair">
+                  <span className="font-display text-base font-bold">الإجمالي النهائي</span>
+                  <span className="font-tech text-2xl font-bold text-primary" dir="rtl">
+                    <AnimatedNumber value={finalTotal} format={(n) => formatPriceCompact(n)} />
+                    <span className="mr-1.5 text-sm font-medium text-muted-foreground">ج.م</span>
+                  </span>
+                </div>
               </div>
+
               <p className="mt-3 text-[0.7rem] leading-5 text-faint">
                 الشحن وطريقة الدفع يُتفق عليهما في محادثة الواتساب.
               </p>
@@ -310,6 +486,8 @@ export default function CheckoutView() {
                 {buildOrderMessage({
                   items: rows,
                   subtotal,
+                  couponCode: appliedCoupon?.code,
+                  discountAmount,
                   customer: { name: preview.name, phone: preview.phone, notes: preview.notes || undefined },
                 })}
               </div>

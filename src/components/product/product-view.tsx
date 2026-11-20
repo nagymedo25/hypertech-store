@@ -11,9 +11,9 @@
  * ============================================================
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
-import { Check, ChevronLeft, Loader2, Minus, Plus, ShoppingBag, Star } from "lucide-react";
+import { Check, ChevronLeft, Cpu, HardDrive, Loader2, Minus, Plus, ShoppingBag, Star } from "lucide-react";
 import type { SpecItem } from "@/types";
 import { useRouterStore } from "@/lib/router";
 import { useMockDB } from "@/lib/store/db-store";
@@ -98,9 +98,13 @@ export default function ProductView({ slug }: { slug: string }) {
 
   const product = products.find((p) => p.slug === slug);
   const category = product ? categories.find((c) => c.id === product.categoryId) : undefined;
+  const hardwareUpgradeRates = useMockDB((s) => s.hardwareUpgradeRates);
 
   const [qty, setQty] = useState(1);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [selectedRam, setSelectedRam] = useState<string>(product?.baseRam || "");
+  const [selectedStorage, setSelectedStorage] = useState<string>(product?.baseStorage || "");
+
   /* أطوار زر الإضافة: idle → pending (~180ms) → added (1.6s احتفال) → idle */
   const [addState, setAddState] = useState<"idle" | "pending" | "added">("idle");
   const addTimers = useRef<number[]>([]);
@@ -114,7 +118,96 @@ export default function ProductView({ slug }: { slug: string }) {
     setPrevSlug(slug);
     setQty(1);
     setActiveIdx(0);
+    setSelectedRam(product?.baseRam || "");
+    setSelectedStorage(product?.baseStorage || "");
   }
+
+  const ramOptions = useMemo(() => {
+    if (!product?.allowRamUpgrade) return [];
+    const activeRates = hardwareUpgradeRates
+      .filter((r) => r.componentType === "ram" && r.active)
+      .sort((a, b) => a.order - b.order || (a.capacityGb ?? 0) - (b.capacityGb ?? 0));
+
+    const list = [...activeRates];
+    if (product.baseRam && !list.some((r) => r.label === product.baseRam)) {
+      list.unshift({
+        id: "base-ram",
+        componentType: "ram",
+        label: product.baseRam,
+        capacityGb: null,
+        priceDelta: 0,
+        order: -1,
+        active: true,
+        createdAt: "",
+        updatedAt: "",
+      });
+    }
+
+    const custom = (product.customHardwarePricing as Record<string, number> | null) ?? {};
+    return list.map((item) => {
+      const isBase = item.label === product.baseRam;
+      const delta = isBase
+        ? 0
+        : custom[item.label] !== undefined
+        ? Number(custom[item.label]) || 0
+        : item.priceDelta;
+      return {
+        ...item,
+        isBase,
+        effectiveDelta: delta,
+      };
+    });
+  }, [product?.allowRamUpgrade, product?.baseRam, product?.customHardwarePricing, hardwareUpgradeRates]);
+
+  const storageOptions = useMemo(() => {
+    if (!product?.allowStorageUpgrade) return [];
+    const activeRates = hardwareUpgradeRates
+      .filter((r) => r.componentType === "storage" && r.active)
+      .sort((a, b) => a.order - b.order || (a.capacityGb ?? 0) - (b.capacityGb ?? 0));
+
+    const list = [...activeRates];
+    if (product.baseStorage && !list.some((r) => r.label === product.baseStorage)) {
+      list.unshift({
+        id: "base-storage",
+        componentType: "storage",
+        label: product.baseStorage,
+        capacityGb: null,
+        priceDelta: 0,
+        order: -1,
+        active: true,
+        createdAt: "",
+        updatedAt: "",
+      });
+    }
+
+    const custom = (product.customHardwarePricing as Record<string, number> | null) ?? {};
+    return list.map((item) => {
+      const isBase = item.label === product.baseStorage;
+      const delta = isBase
+        ? 0
+        : custom[item.label] !== undefined
+        ? Number(custom[item.label]) || 0
+        : item.priceDelta;
+      return {
+        ...item,
+        isBase,
+        effectiveDelta: delta,
+      };
+    });
+  }, [product?.allowStorageUpgrade, product?.baseStorage, product?.customHardwarePricing, hardwareUpgradeRates]);
+
+  const activeRam = selectedRam || product?.baseRam || ramOptions[0]?.label || "";
+  const activeStorage = selectedStorage || product?.baseStorage || storageOptions[0]?.label || "";
+
+  const selectedRamOpt = ramOptions.find((r) => r.label === activeRam);
+  const selectedStorageOpt = storageOptions.find((r) => r.label === activeStorage);
+
+  const ramDelta = product?.allowRamUpgrade && selectedRamOpt ? selectedRamOpt.effectiveDelta : 0;
+  const storageDelta =
+    product?.allowStorageUpgrade && selectedStorageOpt ? selectedStorageOpt.effectiveDelta : 0;
+
+  const dynamicUnitPrice = (product?.price ?? 0) + ramDelta + storageDelta;
+  const dynamicOldPrice = product?.oldPrice ? product.oldPrice + ramDelta + storageDelta : undefined;
 
   if (!product) {
     return <NotFoundView what="المنتج" />;
@@ -154,8 +247,19 @@ export default function ProductView({ slug }: { slug: string }) {
     addTimers.current.push(
       window.setTimeout(() => {
         try {
-          addToCart(product.id, qty);
-          markAdded(product.id, qty);
+          addToCart(product.id, {
+            qty,
+            selectedRam: product.allowRamUpgrade ? activeRam : undefined,
+            selectedStorage: product.allowStorageUpgrade ? activeStorage : undefined,
+            ramUpgradePrice: ramDelta,
+            storageUpgradePrice: storageDelta,
+            unitPrice: dynamicUnitPrice,
+          });
+          markAdded(product.id, qty, {
+            selectedRam: product.allowRamUpgrade ? activeRam : undefined,
+            selectedStorage: product.allowStorageUpgrade ? activeStorage : undefined,
+            unitPrice: dynamicUnitPrice,
+          });
           setAddState("added");
           /* ضغطة النجاح: 1.03 → 1 */
           if (btn && !prefersReducedMotion()) {
@@ -174,7 +278,15 @@ export default function ProductView({ slug }: { slug: string }) {
   };
 
   const openWhatsApp = () => {
-    window.open(productWhatsAppUrl(product, qty), "_blank", "noopener,noreferrer");
+    window.open(
+      productWhatsAppUrl(product, qty, {
+        selectedRam: product.allowRamUpgrade ? activeRam : undefined,
+        selectedStorage: product.allowStorageUpgrade ? activeStorage : undefined,
+        unitPrice: dynamicUnitPrice,
+      }),
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   const step = (dir: 1 | -1) => setQty((q) => Math.min(maxQty, Math.max(1, q + dir)));
@@ -337,7 +449,7 @@ export default function ProductView({ slug }: { slug: string }) {
             </h1>
 
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <PriceTag price={product.price} oldPrice={product.oldPrice} size="lg" />
+              <PriceTag price={dynamicUnitPrice} oldPrice={dynamicOldPrice} size="lg" />
               {product.promotionalLabel && <PromoBadge label={product.promotionalLabel} />}
             </div>
 
@@ -354,6 +466,113 @@ export default function ProductView({ slug }: { slug: string }) {
                 </p>
               ))}
             </div>
+
+            {/* ---------------- خيارات ترقية العتاد (RAM & Storage) ---------------- */}
+            {(product.allowRamUpgrade || product.allowStorageUpgrade) && (
+              <div className="mt-7 space-y-4 rounded-3xl border border-hair bg-elevated/70 p-4 shadow-card sm:p-5">
+                <div className="flex items-center justify-between border-b border-hair pb-3">
+                  <h3 className="flex items-center gap-2 font-display text-base font-bold text-foreground">
+                    <Cpu className="h-5 w-5 text-brand-blue" />
+                    تخصيص وترقية العتاد
+                  </h3>
+                  <span className="rounded-full bg-brand-blue/10 px-2.5 py-0.5 text-[11px] font-bold text-brand-blue">
+                    تحديث فوري للسعر
+                  </span>
+                </div>
+
+                {/* RAM selector */}
+                {product.allowRamUpgrade && ramOptions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-foreground flex items-center gap-1.5">
+                        <Cpu className="h-3.5 w-3.5 text-brand-blue" />
+                        سعة الذاكرة العشوائية (RAM):
+                      </span>
+                      <span className="font-tech font-bold text-brand-blue">{activeRam}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {ramOptions.map((opt) => {
+                        const isSelected = activeRam === opt.label;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setSelectedRam(opt.label)}
+                            className={cn(
+                              "flex flex-col items-start justify-center rounded-xl border p-2.5 text-right transition-all duration-200",
+                              isSelected
+                                ? "border-brand-blue bg-brand-blue/15 shadow-[0_0_12px_rgba(26,92,166,0.25)] ring-1 ring-brand-blue"
+                                : "border-hair bg-surface/60 hover:border-foreground/20 hover:bg-surface"
+                            )}
+                          >
+                            <span className="font-tech text-xs font-bold text-foreground">{opt.label}</span>
+                            <span
+                              className={cn(
+                                "mt-1 font-tech text-[10px]",
+                                opt.effectiveDelta === 0
+                                  ? "text-faint"
+                                  : isSelected
+                                  ? "font-bold text-brand-cyan"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {opt.effectiveDelta === 0 ? "الأساسي" : `+${opt.effectiveDelta.toLocaleString()} ج.م`}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Storage selector */}
+                {product.allowStorageUpgrade && storageOptions.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-hair/50">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-foreground flex items-center gap-1.5">
+                        <HardDrive className="h-3.5 w-3.5 text-brand-cyan" />
+                        سعة وحدة التخزين (SSD):
+                      </span>
+                      <span className="font-tech font-bold text-brand-cyan">{activeStorage}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {storageOptions.map((opt) => {
+                        const isSelected = activeStorage === opt.label;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setSelectedStorage(opt.label)}
+                            className={cn(
+                              "flex flex-col items-start justify-center rounded-xl border p-2.5 text-right transition-all duration-200",
+                              isSelected
+                                ? "border-brand-cyan bg-brand-cyan/15 shadow-[0_0_12px_rgba(0,217,255,0.2)] ring-1 ring-brand-cyan"
+                                : "border-hair bg-surface/60 hover:border-foreground/20 hover:bg-surface"
+                            )}
+                          >
+                            <span className="font-tech text-xs font-bold text-foreground">{opt.label}</span>
+                            <span
+                              className={cn(
+                                "mt-1 font-tech text-[10px]",
+                                opt.effectiveDelta === 0
+                                  ? "text-faint"
+                                  : isSelected
+                                  ? "font-bold text-brand-cyan"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {opt.effectiveDelta === 0 ? "الأساسي" : `+${opt.effectiveDelta.toLocaleString()} ج.م`}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ---------------------- لوحة الشراء ---------------------- */}
             <div className="mt-7 rounded-3xl border border-hair bg-elevated p-4 shadow-card sm:p-5">
@@ -465,7 +684,7 @@ export default function ProductView({ slug }: { slug: string }) {
               <div className="mt-4 flex items-center justify-between border-t border-hair pt-4">
                 <span className="text-sm text-muted-foreground">إجمالي الطلب</span>
                 <span className="font-tech text-lg font-bold tabular-nums text-foreground">
-                  <AnimatedNumber value={product.price * qty} format={formatPrice} />
+                  <AnimatedNumber value={dynamicUnitPrice * qty} format={formatPrice} />
                 </span>
               </div>
             </div>
@@ -504,7 +723,7 @@ export default function ProductView({ slug }: { slug: string }) {
         aria-label="شراء سريع"
       >
         <div className="glass mx-3 flex items-center justify-between gap-3 rounded-2xl px-4 py-3">
-          <PriceTag price={product.price} oldPrice={product.oldPrice} size="sm" animate={false} />
+          <PriceTag price={dynamicUnitPrice} oldPrice={dynamicOldPrice} size="sm" animate={false} />
           {outOfStock ? (
             <button
               type="button"

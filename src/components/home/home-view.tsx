@@ -43,6 +43,8 @@ export default function HomeView({ booted }: { booted: boolean }) {
 function CategoriesSection() {
   const categories = useMockDB((s) => s.categories);
   const settings = useMockDB((s) => s.settings);
+  const siteContent = useMockDB((s) => s.siteContent);
+  const categoriesCms = siteContent?.data?.categories;
   const navigate = useRouterStore((s) => s.navigate);
 
   const visible = useMemo(
@@ -63,10 +65,10 @@ function CategoriesSection() {
       <div className="mx-auto max-w-7xl overflow-x-clip px-4 sm:px-6">
         <SectionHeading
           titleId="categories-title"
-          kicker="أقسام المتجر"
-          title="تسوّق حسب"
-          accentWord="الفئة"
-          description="ثمانية أقسام متخصصة — اختار القسم اللي يناسبك وادخل على عالمه مباشرة."
+          kicker={categoriesCms?.kicker || "أقسام المتجر"}
+          title={categoriesCms?.title || "تسوّق حسب"}
+          accentWord={categoriesCms?.accentWord || "الفئة"}
+          description={categoriesCms?.description || "ثمانية أقسام متخصصة — اختار القسم اللي يناسبك وادخل على عالمه مباشرة."}
         >
           <button
             onClick={() => navigate({ name: "store" })}
@@ -93,6 +95,8 @@ function CategoriesSection() {
 
 function BestSellersSection() {
   const products = useMockDB((s) => s.products);
+  const siteContent = useMockDB((s) => s.siteContent);
+  const bestsellersCms = siteContent?.data?.bestsellers;
   const navigate = useRouterStore((s) => s.navigate);
   const featured = products.filter((p) => p.featured).slice(0, 8);
 
@@ -103,10 +107,10 @@ function BestSellersSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <SectionHeading
           titleId="bestsellers-title"
-          kicker="مختارات هايبر تك"
-          title="الأكثر"
-          accentWord="مبيعًا"
-          description="تشكيلة مختارة بعناية — المنتجات اللي عملاؤنا بيسألوا عليها فعلًا، متجددة أول بأول."
+          kicker={bestsellersCms?.kicker || "مختارات هايبر تك"}
+          title={bestsellersCms?.title || "الأكثر"}
+          accentWord={bestsellersCms?.accentWord || "مبيعًا"}
+          description={bestsellersCms?.description || "تشكيلة مختارة بعناية — المنتجات اللي عملاؤنا بيسألوا عليها فعلًا، متجددة أول بأول."}
         >
           <button
             onClick={() => navigate({ name: "store" })}
@@ -158,6 +162,37 @@ const WHY_ITEMS = [
 
 function TrustSection() {
   const navigate = useRouterStore((s) => s.navigate);
+  const siteContent = useMockDB((s) => s.siteContent);
+  const trustCms = siteContent?.data?.trust;
+
+  const trustItems = useMemo(() => {
+    return [
+      {
+        icon: RefreshCw,
+        title: trustCms?.card1Title || WHY_ITEMS[0].title,
+        body: trustCms?.card1Body || WHY_ITEMS[0].body,
+        fact: trustCms?.card1Fact || WHY_ITEMS[0].fact,
+      },
+      {
+        icon: Cpu,
+        title: trustCms?.card2Title || WHY_ITEMS[1].title,
+        body: trustCms?.card2Body || WHY_ITEMS[1].body,
+        fact: trustCms?.card2Fact || WHY_ITEMS[1].fact,
+      },
+      {
+        icon: MessageCircle,
+        title: trustCms?.card3Title || WHY_ITEMS[2].title,
+        body: trustCms?.card3Body || WHY_ITEMS[2].body,
+        fact: trustCms?.card3Fact || WHY_ITEMS[2].fact,
+      },
+      {
+        icon: Users,
+        title: trustCms?.card4Title || WHY_ITEMS[3].title,
+        body: trustCms?.card4Body || WHY_ITEMS[3].body,
+        fact: trustCms?.card4Fact || WHY_ITEMS[3].fact,
+      },
+    ];
+  }, [trustCms]);
 
   return (
     <section className="relative py-20 sm:py-28" aria-labelledby="why-title">
@@ -166,14 +201,14 @@ function TrustSection() {
       <div className="mx-auto max-w-7xl overflow-x-clip px-4 sm:px-6">
         <SectionHeading
           titleId="why-title"
-          kicker="ليه هايبر تك؟"
-          title="أربعة أسباب"
-          accentWord="موثّقة"
-          description="كل ميزة هنا مأخوذة من معلومات حقيقية عن نشاط المتجر — مفيش وعود عامة."
+          kicker={trustCms?.kicker || "ليه هايبر تك؟"}
+          title={trustCms?.title || "أربعة أسباب"}
+          accentWord={trustCms?.accentWord || "موثّقة"}
+          description={trustCms?.description || "كل ميزة هنا مأخوذة من معلومات حقيقية عن نشاط المتجر — مفيش وعود عامة."}
         />
 
         <div className="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2">
-          {WHY_ITEMS.map((item, i) => (
+          {trustItems.map((item, i) => (
             <Reveal key={item.title} dir={i % 2 === 0 ? "start" : "end"}>
               <article className="group relative h-full overflow-hidden rounded-3xl border border-hair bg-elevated p-6 shadow-card transition-all duration-500 hover:-translate-y-1 hover:shadow-card-lg sm:p-8">
                 <span
@@ -208,10 +243,12 @@ function TrustSection() {
                 <Wrench className="h-6 w-6" />
               </span>
               <div>
-                <h3 className="font-display text-xl font-bold sm:text-2xl">جهازك فيه مشكلة؟</h3>
+                <h3 className="font-display text-xl font-bold sm:text-2xl">
+                  {trustCms?.maintenanceTitle || "جهازك فيه مشكلة؟"}
+                </h3>
                 <p className="mt-1.5 max-w-md text-sm leading-7 text-muted-foreground">
-                  صف لنا المشكلة بخطوات بسيطة — من غير حساب ولا تعقيد — وابعتها واتساب على طول،
-                  وفريق الصيانة هيتواصل معاك.
+                  {trustCms?.maintenanceText ||
+                    "صف لنا المشكلة بخطوات بسيطة — من غير حساب ولا تعقيد — وابعتها واتساب على طول، وفريق الصيانة هيتواصل معاك."}
                 </p>
               </div>
             </div>
@@ -219,7 +256,7 @@ function TrustSection() {
               onClick={() => navigate({ name: "maintenance" })}
               className="glow-accent-sm group relative inline-flex shrink-0 items-center gap-2.5 rounded-2xl bg-primary px-7 py-4 font-bold text-primary-foreground transition-transform hover:scale-[1.02] active:scale-95"
             >
-              ابدأ طلب الصيانة
+              {trustCms?.maintenanceCta || "ابدأ طلب الصيانة"}
               <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
             </button>
           </div>

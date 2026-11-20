@@ -37,6 +37,9 @@ export type AdminSection =
   | "builds"
   | "orders"
   | "maintenance"
+  | "hardware-pricing"
+  | "coupons"
+  | "content"
   | "data"
   | "settings";
 
@@ -47,6 +50,7 @@ export interface StoreFilters {
   availability?: string[];
   sort?: string;
   q?: string;
+  view?: string;
 }
 
 export type Route =
@@ -94,6 +98,8 @@ export function parseHash(rawHash: string): Route {
       if (sortParam && sortParam !== "newest") filters.sort = sortParam;
       const qParam = params?.get("q");
       if (qParam && qParam.trim()) filters.q = qParam.trim();
+      const viewParam = params?.get("view");
+      if (viewParam && viewParam.trim()) filters.view = viewParam.trim();
 
       const hasFilters = Object.keys(filters).length > 0;
       return {
@@ -124,6 +130,9 @@ export function parseHash(rawHash: string): Route {
         "builds",
         "orders",
         "maintenance",
+        "hardware-pricing",
+        "coupons",
+        "content",
         "data",
         "settings",
       ];
@@ -149,6 +158,7 @@ export function routeToHash(route: Route): string {
         if (f.availability?.length) sp.set("avail", f.availability.join(","));
         if (f.sort && f.sort !== "newest") sp.set("sort", f.sort);
         if (f.q && f.q.trim()) sp.set("q", f.q.trim());
+        if (f.view && f.view.trim()) sp.set("view", f.view.trim());
       }
       const qs = sp.toString();
       return qs ? `#/store?${qs}` : "#/store";

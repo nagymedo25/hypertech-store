@@ -12,19 +12,25 @@
 
 import type {
   Category,
+  DiscountCode,
+  HardwareUpgradeRate,
   MaintenanceRecord,
   OrderLine,
   OrderRecord,
   PCBuild,
   Product,
+  SiteContent,
   StoreSettings,
 } from "@/types";
 import type {
   Category as CategoryRow,
+  DiscountCode as DiscountCodeRow,
+  HardwareUpgradeRate as HardwareUpgradeRateRow,
   MaintenanceRecord as MaintenanceRow,
   OrderRecord as OrderRow,
   PCBuild as BuildRow,
   Product as ProductRow,
+  SiteContent as SiteContentRow,
   StoreSettings as SettingsRow,
 } from "@prisma/client";
 
@@ -53,6 +59,14 @@ export function toProduct(row: ProductRow): Product {
     rating: row.rating,
     specs: jsonArr<Product["specs"][number]>(row.specs),
     specLayout: row.specLayout as Product["specLayout"],
+    baseRam: row.baseRam ?? undefined,
+    baseStorage: row.baseStorage ?? undefined,
+    allowRamUpgrade: row.allowRamUpgrade ?? false,
+    allowStorageUpgrade: row.allowStorageUpgrade ?? false,
+    customHardwarePricing:
+      row.customHardwarePricing && typeof row.customHardwarePricing === "object"
+        ? (row.customHardwarePricing as Record<string, any>)
+        : undefined,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -98,6 +112,8 @@ export function toOrder(row: OrderRow): OrderRecord {
     customerPhone: row.customerPhone,
     items: jsonArr<OrderLine>(row.items),
     total: row.total,
+    couponCode: row.couponCode ?? undefined,
+    discountAmount: row.discountAmount ?? 0,
     createdAt: row.createdAt.toISOString(),
     status: row.status as OrderRecord["status"],
     notes: row.notes ?? undefined,
@@ -134,6 +150,48 @@ export function toSettings(row: SettingsRow): StoreSettings {
     businessDescription: row.businessDescription,
     logoUrl: row.logoUrl ?? undefined,
     showBuildsCategory: row.showBuildsCategory,
+  };
+}
+
+export function toHardwareUpgradeRate(row: HardwareUpgradeRateRow): HardwareUpgradeRate {
+  return {
+    id: row.id,
+    componentType: row.componentType as HardwareUpgradeRate["componentType"],
+    label: row.label,
+    capacityGb: row.capacityGb ?? null,
+    priceDelta: row.priceDelta,
+    order: row.order,
+    active: row.active,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toDiscountCode(row: DiscountCodeRow): DiscountCode {
+  return {
+    id: row.id,
+    code: row.code,
+    discountType: row.discountType as DiscountCode["discountType"],
+    discountValue: row.discountValue,
+    minOrderAmount: row.minOrderAmount ?? null,
+    maxDiscountAmount: row.maxDiscountAmount ?? null,
+    usageLimit: row.usageLimit ?? null,
+    usedCount: row.usedCount,
+    expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
+    isActive: row.isActive,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export function toSiteContent(row: SiteContentRow): SiteContent {
+  return {
+    id: row.id,
+    data:
+      row.data && typeof row.data === "object" && !Array.isArray(row.data)
+        ? (row.data as Record<string, any>)
+        : {},
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 

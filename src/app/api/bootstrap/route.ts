@@ -15,7 +15,16 @@
 import { db } from "@/lib/db";
 import { json, serverError } from "@/lib/server/http";
 import { ensureAuthBooted } from "@/lib/server/auth";
-import { toProduct, toCategory, toBuild, toSettings, pickHeroProduct } from "@/lib/server/serializers";
+import { ensureBootstrapDefaults } from "@/lib/server/seed-defaults";
+import {
+  toProduct,
+  toCategory,
+  toBuild,
+  toSettings,
+  toHardwareUpgradeRate,
+  toSiteContent,
+  pickHeroProduct,
+} from "@/lib/server/serializers";
 
 interface CachedPayload {
   data: any;
@@ -42,16 +51,28 @@ export async function GET() {
     }
 
     await ensureAuthBooted();
+    await ensureBootstrapDefaults();
 
-    const [productRows, categoryRows, buildRows, settingsRow] = await Promise.all([
+    const [
+      productRows,
+      categoryRows,
+      buildRows,
+      settingsRow,
+      hardwareUpgradeRows,
+      siteContentRow,
+    ] = await Promise.all([
       db.product.findMany({ orderBy: { createdAt: "desc" } }),
       db.category.findMany({ orderBy: { order: "asc" } }),
       db.pCBuild.findMany({ orderBy: { createdAt: "desc" } }),
       db.storeSettings.findUnique({ where: { id: "singleton" } }),
+      db.hardwareUpgradeRate.findMany({ orderBy: { order: "asc" } }),
+      db.siteContent.findUnique({ where: { id: "singleton" } }),
     ]);
 
     const products = productRows.map(toProduct);
     const categories = categoryRows.map(toCategory);
+    const hardwareUpgradeRates = hardwareUpgradeRows.map(toHardwareUpgradeRate);
+    const siteContent = siteContentRow ? toSiteContent(siteContentRow) : null;
 
     // Storefront hides inactive categories' products (builds category obeys settings)
     const activeCatIds = new Set(categories.filter((c) => c.active !== false).map((c) => c.id));
@@ -63,6 +84,8 @@ export async function GET() {
       builds: buildRows.map(toBuild),
       settings: settingsRow ? toSettings(settingsRow) : null,
       hero: pickHeroProduct(publicProducts),
+      hardwareUpgradeRates,
+      siteContent,
       serverTime: new Date().toISOString(),
     };
 

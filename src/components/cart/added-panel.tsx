@@ -74,7 +74,14 @@ export function AddedPanel() {
 
   /* Real product data (server is the source of truth) */
   const product = lastAdded ? products.find((p) => p.id === lastAdded.productId) : undefined;
-  const lineItem = lastAdded ? items.find((i) => i.productId === lastAdded.productId) : undefined;
+  const lineItem = lastAdded
+    ? items.find(
+        (i) =>
+          i.productId === lastAdded.productId &&
+          (i.selectedRam || "") === (lastAdded.selectedRam || "") &&
+          (i.selectedStorage || "") === (lastAdded.selectedStorage || "")
+      )
+    : undefined;
 
   /* Visibility contract: panel flag + a lastAdded that is STILL in the cart */
   const visible = panelOpen && !!lastAdded && !!lineItem && !!product;
@@ -84,7 +91,9 @@ export function AddedPanel() {
     () =>
       items.reduce((acc, i) => {
         const p = products.find((pp) => pp.id === i.productId);
-        return acc + (p ? p.price * i.qty : 0);
+        const itemUnitPrice =
+          i.unitPrice ?? (p ? p.price + (i.ramUpgradePrice ?? 0) + (i.storageUpgradePrice ?? 0) : 0);
+        return acc + itemUnitPrice * i.qty;
       }, 0),
     [items, products]
   );
@@ -246,6 +255,20 @@ export function AddedPanel() {
                 >
                   {product.name}
                 </button>
+                {(lastAdded?.selectedRam || lastAdded?.selectedStorage) && (
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    {lastAdded.selectedRam && (
+                      <span className="rounded bg-brand-blue/15 px-1.5 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                        {lastAdded.selectedRam}
+                      </span>
+                    )}
+                    {lastAdded.selectedStorage && (
+                      <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                        {lastAdded.selectedStorage}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {avail && (
                   <p
                     className={cn(
@@ -261,11 +284,11 @@ export function AddedPanel() {
 
               <div className="shrink-0 text-left">
                 <p className="font-tech text-sm font-bold tabular-nums">
-                  {formatPrice(product.price * lineQty)}
+                  {formatPrice((lineItem?.unitPrice ?? lastAdded?.unitPrice ?? product.price) * lineQty)}
                 </p>
                 {lineQty > 1 && (
                   <p className="mt-0.5 font-tech text-[0.65rem] tabular-nums text-muted-foreground">
-                    {formatPrice(product.price)} للوحدة
+                    {formatPrice(lineItem?.unitPrice ?? lastAdded?.unitPrice ?? product.price)} للوحدة
                   </p>
                 )}
               </div>

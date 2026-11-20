@@ -35,6 +35,11 @@ export const productInputSchema = z.object({
   specs: z.array(specItemSchema).max(30).default([]),
   specLayout: specLayoutEnum.default("device"),
   heroEligible: z.boolean().default(true),
+  baseRam: z.string().trim().max(100).nullable().optional(),
+  baseStorage: z.string().trim().max(100).nullable().optional(),
+  allowRamUpgrade: z.boolean().default(false),
+  allowStorageUpgrade: z.boolean().default(false),
+  customHardwarePricing: z.record(z.string(), z.any()).nullable().optional(),
 });
 
 export const productPatchSchema = productInputSchema.partial();
@@ -42,11 +47,11 @@ export const productPatchSchema = productInputSchema.partial();
 export const categoryInputSchema = z.object({
   name: z.string().trim().min(2).max(80),
   slug: z.string().trim().max(80).optional(),
-  tagline: z.string().trim().min(2).max(120),
-  description: z.string().trim().min(2).max(2000),
-  image: z.string().trim().min(1).max(2000),
-  accent: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/),
-  icon: z.string().trim().min(1).max(60),
+  tagline: z.string().trim().max(160).default(""),
+  description: z.string().trim().max(3000).default(""),
+  image: z.string().trim().max(2000).default(""),
+  accent: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/).default("#0ea5e9"),
+  icon: z.string().trim().max(60).default("Package"),
   order: z.number().int().min(0).max(999).optional(),
   active: z.boolean().optional(),
 });
@@ -101,17 +106,33 @@ export const maintenancePatchSchema = z.object({
   adminNotes: z.string().trim().max(2000).nullable().optional(),
 });
 
+export const hardwareUpgradeRateInputSchema = z.object({
+  componentType: z.enum(["ram", "storage"]),
+  label: z.string().trim().min(1).max(100),
+  capacityGb: z.number().int().min(1).max(100_000).nullable().optional(),
+  priceDelta: z.number().min(0).max(1_000_000),
+  order: z.number().int().min(0).max(999).default(0),
+  active: z.boolean().default(true),
+});
+
+export const hardwareUpgradeRatePatchSchema = hardwareUpgradeRateInputSchema.partial();
+
 /* ------------------------- Public submissions ------------------------- */
 
 export const orderSubmitSchema = z.object({
   customerName: z.string().trim().min(3).max(120),
   customerPhone: z.string().trim().regex(/^01[0-9]{9}$/, "رقم موبايل مصري غير صالح"),
   notes: z.string().trim().max(300).optional(),
+  couponCode: z.string().trim().max(50).optional(),
   items: z
     .array(
       z.object({
         productId: z.string().trim().min(1).max(100),
         qty: z.number().int().min(1).max(99),
+        selectedRam: z.string().trim().max(100).optional(),
+        selectedStorage: z.string().trim().max(100).optional(),
+        ramUpgradePrice: z.number().min(0).optional(),
+        storageUpgradePrice: z.number().min(0).optional(),
       })
     )
     .min(1, "السلة فاضية"),

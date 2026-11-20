@@ -179,15 +179,31 @@ export default function OrdersManager() {
       {o.items.map((it, i) => (
         <div
           key={`${o.id}-${i}`}
-          className="flex items-center justify-between gap-3 rounded-lg border border-hair bg-surface/50 px-3 py-2"
+          className="flex flex-col gap-1 rounded-lg border border-hair bg-surface/50 px-3 py-2"
         >
-          <span className="min-w-0 truncate text-sm">{it.name}</span>
-          <span className="shrink-0 text-xs text-muted-foreground">
-            <span className="font-tech" dir="ltr">
-              {it.qty} × {formatPriceCompact(it.price)}
-            </span>{" "}
-            ج.م
-          </span>
+          <div className="flex items-center justify-between gap-3">
+            <span className="min-w-0 font-medium text-sm">{it.name}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              <span className="font-tech" dir="ltr">
+                {it.qty} × {formatPriceCompact(it.price)}
+              </span>{" "}
+              ج.م
+            </span>
+          </div>
+          {(it.selectedRam || it.selectedStorage) && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[11px]">
+              {it.selectedRam && (
+                <span className="rounded bg-brand-blue/15 px-1.5 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                  الرام: {it.selectedRam}
+                </span>
+              )}
+              {it.selectedStorage && (
+                <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                  التخزين: {it.selectedStorage}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       ))}
       {o.notes ? <p className="pt-1 text-xs text-muted-foreground">ملاحظات: {o.notes}</p> : null}

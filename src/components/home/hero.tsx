@@ -185,6 +185,8 @@ export function Hero({ booted }: { booted: boolean }) {
   const categories = useMockDB((s) => s.categories);
   const settings = useMockDB((s) => s.settings);
   const heroProduct = useMockDB((s) => s.heroProduct);
+  const siteContent = useMockDB((s) => s.siteContent);
+  const heroCms = siteContent?.data?.hero;
 
   /* The showcase product — the server's intelligent pick, kept
      fresh against live catalog edits (same id → newest data),
@@ -443,9 +445,11 @@ export function Hero({ booted }: { booted: boolean }) {
             <span className="relative flex h-2 w-2" aria-hidden>
               <span className="absolute inline-flex h-full w-full animate-pulse-dot rounded-full bg-mint" />
             </span>
-            {hero?.brand?.trim()
-              ? `عرضنا المميّز — ${hero.brand.trim()}`
-              : `متجر إلكترونيات موثوق — ${BUSINESS.city}`}
+            {heroCms?.kicker?.trim()
+              ? heroCms.kicker.trim()
+              : hero?.brand?.trim()
+                ? `عرضنا المميّز — ${hero.brand.trim()}`
+                : `متجر إلكترونيات موثوق — ${BUSINESS.city}`}
             <BadgeCheck className="h-3.5 w-3.5 text-mint" aria-hidden />
           </p>
 
@@ -453,20 +457,21 @@ export function Hero({ booted }: { booted: boolean }) {
           <h1 className="font-display text-[2.35rem] font-extrabold leading-[1.14] tracking-tight text-foreground sm:text-6xl lg:text-[4.2rem] lg:leading-[1.12]">
             <span className="block overflow-hidden pb-1">
               <span data-hero-line className="block">
-                شغّل
+                {heroCms?.headlineLine1 || "شغّل"}
               </span>
             </span>
             <span className="block overflow-hidden pb-2">
               <span data-hero-line className="block">
-                مستواك <span className="text-electric">التالي</span>
+                {heroCms?.headlineLine2 || "مستواك"}{" "}
+                <span className="text-electric">{heroCms?.headlineAccent || "التالي"}</span>
               </span>
             </span>
           </h1>
 
           {/* Description */}
           <p data-hero-desc className="mx-auto mt-5 max-w-xl text-sm leading-7 text-muted-foreground sm:text-base sm:leading-9 lg:mx-0 lg:mt-6 lg:leading-8">
-            لابتوب، تجميعات PC، وأجزاء واكسسوارات مختارة بعناية — مع بيع وشراء واستبدال،
-            وخدمة صيانة بنفس المكان. كل اللي تحتاجه لتقنيتك، تحت سقف واحد.
+            {heroCms?.description ||
+              "لابتوب، تجميعات PC، وأجزاء واكسسوارات مختارة بعناية — مع بيع وشراء واستبدال، وخدمة صيانة بنفس المكان. كل اللي تحتاجه لتقنيتك، تحت سقف واحد."}
           </p>
 
           {/* CTAs */}
@@ -475,14 +480,14 @@ export function Hero({ booted }: { booted: boolean }) {
               onClick={() => navigate({ name: "store" })}
               className="glow-accent-sm group inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-primary px-8 py-3.5 text-base font-bold text-primary-foreground transition-all hover:bg-[#2a6cb3] hover:shadow-[0_14px_38px_-12px_rgba(26,92,166,0.5)] active:scale-[0.97] sm:w-auto lg:py-4"
             >
-              ابدأ التسوّق
+              {heroCms?.ctaPrimary || "ابدأ التسوّق"}
               <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
             </button>
             <button
               onClick={() => navigate({ name: "builds" })}
               className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-foreground/12 bg-elevated/60 px-8 py-3.5 text-base font-bold text-foreground transition-all hover:border-foreground/25 hover:bg-elevated sm:w-auto lg:py-4"
             >
-              شوف تجميعاتنا
+              {heroCms?.ctaSecondary || "شوف تجميعاتنا"}
               <span className="h-1.5 w-1.5 rounded-full bg-mint" aria-hidden />
             </button>
           </div>

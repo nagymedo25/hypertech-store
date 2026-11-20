@@ -22,9 +22,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import {
   ArrowLeft,
+  Briefcase,
   Check,
   ChevronLeft,
   ChevronRight,
+  Coins,
   Cpu,
   FilterX,
   Gamepad2,
@@ -32,14 +34,18 @@ import {
   Headphones,
   Keyboard,
   Laptop,
+  Layers,
   LayoutGrid,
   MemoryStick,
   Mouse,
   Package,
   PackageSearch,
   Search,
+  ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   X,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import type { Category, Product, ProductAvailability } from "@/types";
@@ -49,6 +55,7 @@ import { ViewHeader } from "@/components/layout/view-header";
 import { NotFoundView } from "@/components/layout/not-found";
 import { ProductCard } from "@/components/store/product-card";
 import { BuildCard } from "@/components/builds/build-card";
+import { WorldsGateway } from "@/components/store/worlds-gateway";
 import { Reveal, StaggerReveal } from "@/components/motion/reveal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -100,6 +107,12 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   HardDrive,
   Cpu,
   Headphones,
+  Briefcase,
+  Coins,
+  Sparkles,
+  ShieldCheck,
+  Layers,
+  Zap,
 };
 const categoryIcon = (name: string): LucideIcon => CATEGORY_ICONS[name] ?? Package;
 
@@ -182,6 +195,7 @@ function buildFilters(f: {
   min?: number;
   max?: number;
   availability: ProductAvailability[];
+  view?: string;
 }): StoreFilters {
   const out: StoreFilters = {};
   if (f.min !== undefined) out.min = f.min;
@@ -189,6 +203,7 @@ function buildFilters(f: {
   if (f.availability.length) out.availability = [...f.availability];
   if (f.sort !== "newest") out.sort = f.sort;
   if (f.q) out.q = f.q;
+  if (f.view) out.view = f.view;
   return out;
 }
 
@@ -586,6 +601,7 @@ interface RoutePatch {
   min?: number | null;
   max?: number | null;
   availability?: ProductAvailability[];
+  view?: string | null;
   replace?: boolean;
 }
 
@@ -628,6 +644,7 @@ export default function StoreView({
     (filters?.availability ?? []).join(","),
     filters?.sort ?? "newest",
     filters?.q ?? "",
+    filters?.view ?? "",
   ].join("|");
   const [prevSig, setPrevSig] = useState(routeSig);
   const [prevWorld, setPrevWorld] = useState(categorySlug ?? "all");
@@ -799,12 +816,20 @@ export default function StoreView({
     const minVal = patch.min !== undefined ? (patch.min ?? undefined) : min;
     const maxVal = patch.max !== undefined ? (patch.max ?? undefined) : max;
     const availVal = patch.availability ?? availability;
+    const viewVal = patch.view !== undefined ? (patch.view ?? undefined) : filters?.view;
     navigate(
       {
         name: "store",
         categorySlug: patch.categorySlug !== undefined ? (patch.categorySlug ?? undefined) : categorySlug,
         brand: brands.length ? brands.join(",") : undefined,
-        filters: buildFilters({ q: qVal, sort: sortVal, min: minVal, max: maxVal, availability: availVal }),
+        filters: buildFilters({
+          q: qVal,
+          sort: sortVal,
+          min: minVal,
+          max: maxVal,
+          availability: availVal,
+          view: viewVal,
+        }),
       },
       { replace: patch.replace === true }
     );
@@ -825,19 +850,30 @@ export default function StoreView({
             min: parsePriceInput(s.minPrice),
             max: parsePriceInput(s.maxPrice),
             availability: s.availability,
+            view: filters?.view,
           }),
         },
         { replace: true }
       );
     }, SEARCH_SYNC_MS);
     return () => clearTimeout(t);
-  }, [search, navigate]);
+  }, [search, navigate, filters?.view]);
 
   /* ---------------------------- التفاعلات ---------------------------- */
 
   const goCategory = (slug?: string) => {
     setDrawerOpen(false);
-    pushRoute({ categorySlug: slug ?? null });
+    pushRoute({ categorySlug: slug ?? null, view: slug ? undefined : "all" });
+  };
+
+  const goGateway = () => {
+    setDrawerOpen(false);
+    navigate({
+      name: "store",
+      categorySlug: undefined,
+      brand: undefined,
+      filters: undefined,
+    });
   };
 
   const toggleAvailability = (value: ProductAvailability) => {
@@ -907,7 +943,7 @@ export default function StoreView({
   if (category) {
     activeChips.push({
       id: `cat:${category.slug}`,
-      label: category.name,
+      label: `الفئة: ${category.name}`,
       onRemove: () => goCategory(undefined),
     });
   }
@@ -961,6 +997,32 @@ export default function StoreView({
   /* slug فئة مش موجودة → dead-end أنيق */
   if (categorySlug && !category) {
     return <NotFoundView what="الفئة" />;
+  }
+
+  /* ------------------- بوابة العوالم الافتراضية عند الدخول ------------------- */
+  const isGatewayMode =
+    !categorySlug &&
+    filters?.view !== "all" &&
+    !search.trim() &&
+    !brandsFilter.length &&
+    min === undefined &&
+    max === undefined &&
+    (!availability || availability.length === 0);
+
+  if (isGatewayMode) {
+    return (
+      <WorldsGateway
+        categories={sortedCategories}
+        products={products}
+        buildsCount={builds.length}
+        onSelectCategory={(slug) => {
+          goCategory(slug);
+        }}
+        onViewAll={() => {
+          pushRoute({ view: "all" });
+        }}
+      />
+    );
   }
 
   const panelProps: FilterPanelProps = {
@@ -1036,35 +1098,41 @@ export default function StoreView({
         />
       )}
 
-      {/* ====== شريط عوالم الفئات (موبايل/تابلت — سطح المكتب: الشريط الجانبي) ====== */}
+      {/* ====== شريط عوالم وفئات المتجر المتكامل للتنقل السريع ====== */}
       <nav
-        aria-label="عوالم المتجر"
-        className="-mx-4 mt-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-6 sm:px-6 lg:hidden"
+        aria-label="عوالم وفئات المتجر"
+        className="-mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-6 sm:px-6"
       >
-        <ul className="flex w-max items-center gap-2">
-          <li>
-            <WorldChip
-              active={!category}
-              accent="var(--primary)"
-              label="الكل"
-              count={facets.allCount}
-              onClick={() => goCategory(undefined)}
-              ariaLabel="عرض كل المنتجات"
-            />
-          </li>
-          {sortedCategories.map((c) => (
-            <li key={c.id}>
-              <WorldChip
-                active={category?.id === c.id}
-                accent={c.accent}
-                label={c.name}
-                count={c.slug === BUILDS_SLUG ? builds.length : (facets.perCategory.get(c.id) ?? 0)}
-                onClick={() => goCategory(c.slug)}
-                ariaLabel={`تصفح ${c.name}`}
-              />
-            </li>
-          ))}
-        </ul>
+        <button
+          type="button"
+          onClick={goGateway}
+          aria-label="الرجوع إلى بوابة العوالم الرقمية"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/30 bg-primary/[0.08] px-3.5 py-2 text-xs font-bold text-primary transition-all duration-300 hover:bg-primary/15 hover:border-primary/50 active:scale-95 shadow-sm"
+        >
+          <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden />
+          <span>بوابة العوالم</span>
+        </button>
+
+        <WorldChip
+          active={!category}
+          accent="var(--primary)"
+          label="الكل"
+          count={facets.allCount}
+          onClick={() => pushRoute({ categorySlug: null, view: "all" })}
+          ariaLabel="عرض كل المنتجات"
+        />
+
+        {sortedCategories.map((c) => (
+          <WorldChip
+            key={c.id}
+            active={category?.id === c.id}
+            accent={c.accent}
+            label={c.name}
+            count={c.slug === BUILDS_SLUG ? builds.length : (facets.perCategory.get(c.id) ?? 0)}
+            onClick={() => goCategory(c.slug)}
+            ariaLabel={`تصفح ${c.name}`}
+          />
+        ))}
       </nav>
 
       {/* ===================== عالم التجميعات ===================== */}

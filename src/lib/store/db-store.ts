@@ -19,10 +19,12 @@ import { create } from "zustand";
 import { BUSINESS } from "@/lib/config";
 import type {
   Category,
+  HardwareUpgradeRate,
   MaintenanceRecord,
   OrderRecord,
   PCBuild,
   Product,
+  SiteContent,
   StoreSettings,
 } from "@/types";
 
@@ -32,6 +34,8 @@ export interface BootstrapPayload {
   builds: PCBuild[];
   settings: StoreSettings | null;
   hero: Product | null;
+  hardwareUpgradeRates?: HardwareUpgradeRate[];
+  siteContent?: SiteContent | null;
 }
 
 /** Identity defaults (verified business data) — replaced by DB settings on hydrate. */
@@ -57,6 +61,10 @@ interface LiveDBState {
   settings: StoreSettings;
   /** The intelligent hero pick from the server (null until hydrated). */
   heroProduct: Product | null;
+  /** Hardware upgrade pricing rates (RAM, SSD). */
+  hardwareUpgradeRates: HardwareUpgradeRate[];
+  /** Dynamic site content / announcements / promotional banners. */
+  siteContent: SiteContent | null;
   /** True once /api/bootstrap succeeded. */
   bootstrapped: boolean;
   /** True when the bootstrap request failed (drives the retry screen). */
@@ -68,6 +76,8 @@ interface LiveDBState {
   setOrders: (orders: OrderRecord[]) => void;
   setMaintenance: (requests: MaintenanceRecord[]) => void;
   setCategories: (categories: Category[]) => void;
+  setHardwareUpgradeRates: (rates: HardwareUpgradeRate[]) => void;
+  setSiteContent: (content: SiteContent | null) => void;
 
   /* Catalog cache mutations — invoked by the repository layer
      ONLY after the server has confirmed the change. */
@@ -94,6 +104,12 @@ interface LiveDBState {
 
   updateSettings: (patch: Partial<StoreSettings>) => void;
 
+  addHardwareUpgradeRate: (rate: HardwareUpgradeRate) => void;
+  updateHardwareUpgradeRate: (id: string, patch: Partial<HardwareUpgradeRate>) => void;
+  removeHardwareUpgradeRate: (id: string) => void;
+
+  updateSiteContent: (patch: Partial<SiteContent> | Record<string, any>) => void;
+
   /** After a verified server-side store reset — clear operational data. */
   applyStoreReset: () => void;
 }
@@ -106,6 +122,8 @@ export const useMockDB = create<LiveDBState>()((set) => ({
   maintenanceRequests: [],
   settings: defaultSettings,
   heroProduct: null,
+  hardwareUpgradeRates: [],
+  siteContent: null,
   bootstrapped: false,
   bootstrapError: false,
 
@@ -116,6 +134,8 @@ export const useMockDB = create<LiveDBState>()((set) => ({
       builds: payload.builds,
       settings: payload.settings ?? defaultSettings,
       heroProduct: payload.hero,
+      hardwareUpgradeRates: payload.hardwareUpgradeRates ?? [],
+      siteContent: payload.siteContent ?? null,
       bootstrapped: true,
       bootstrapError: false,
     }),
@@ -124,6 +144,8 @@ export const useMockDB = create<LiveDBState>()((set) => ({
   setOrders: (orders) => set({ orders }),
   setMaintenance: (requests) => set({ maintenanceRequests: requests }),
   setCategories: (categories) => set({ categories }),
+  setHardwareUpgradeRates: (rates) => set({ hardwareUpgradeRates: rates }),
+  setSiteContent: (content) => set({ siteContent: content }),
 
   addProduct: (p) => set((s) => ({ products: [p, ...s.products] })),
   updateProduct: (id, patch) =>
@@ -178,6 +200,35 @@ export const useMockDB = create<LiveDBState>()((set) => ({
     })),
 
   updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+
+  addHardwareUpgradeRate: (rate) =>
+    set((s) => ({ hardwareUpgradeRates: [...s.hardwareUpgradeRates, rate] })),
+  updateHardwareUpgradeRate: (id, patch) =>
+    set((s) => ({
+      hardwareUpgradeRates: s.hardwareUpgradeRates.map((r) =>
+        r.id === id ? { ...r, ...patch } : r
+      ),
+    })),
+  removeHardwareUpgradeRate: (id) =>
+    set((s) => ({
+      hardwareUpgradeRates: s.hardwareUpgradeRates.filter((r) => r.id !== id),
+    })),
+
+  updateSiteContent: (patch) =>
+    set((s) => {
+      const existingData = s.siteContent?.data ?? {};
+      const incomingData =
+        typeof patch === "object" && patch !== null && "data" in patch && (patch as any).data
+          ? (patch as any).data
+          : patch;
+      return {
+        siteContent: {
+          id: "singleton",
+          data: { ...existingData, ...incomingData },
+          updatedAt: new Date().toISOString(),
+        },
+      };
+    }),
 
   applyStoreReset: () =>
     set({

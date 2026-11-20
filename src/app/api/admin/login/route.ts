@@ -38,7 +38,11 @@ export async function POST(req: Request) {
       return tooMany(`محاولات كتير — استنى ${Math.ceil(waitSec / 60)} دقيقة قبل المحاولة تاني`, waitSec);
     }
 
-    const admin = await db.adminUser.findUnique({ where: { username } });
+    const admin = await db.adminUser.findFirst({
+      where: {
+        OR: [{ username }, { email: username }],
+      },
+    });
 
     if (!admin || !verifyPassword(password, admin.passwordHash)) {
       const blocked = recordLoginFailure(req, username);
@@ -59,7 +63,7 @@ export async function POST(req: Request) {
       where: { id: admin.id },
       data: { lastLoginAt: new Date() },
     });
-    await logAudit("login", username);
+    await logAudit("login", admin.username);
 
     return json(
       { ok: true, username: admin.username },

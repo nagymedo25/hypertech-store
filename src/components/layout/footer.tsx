@@ -30,6 +30,8 @@ export function Footer() {
   const navigate = useRouterStore((s) => s.navigate);
   const categories = useMockDB((s) => s.categories);
   const settings = useMockDB((s) => s.settings);
+  const siteContent = useMockDB((s) => s.siteContent);
+  const footerCms = siteContent?.data?.footer;
   const [policy, setPolicy] = useState<null | "privacy" | "exchange" | "terms">(null);
 
   const visibleCategories = [...categories]
@@ -123,7 +125,7 @@ export function Footer() {
               )}
             </div>
             <p className="mt-5 max-w-sm text-sm leading-7 text-muted-foreground">
-              {settings.businessDescription || BUSINESS.description}
+              {footerCms?.about || settings.businessDescription || BUSINESS.description}
             </p>
             <div className="mt-5 flex items-center gap-2.5" aria-label="قنوات التواصل">
               <a
@@ -215,7 +217,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-2.5 text-muted-foreground">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span>{BUSINESS.address}</span>
+                <span>{footerCms?.address || BUSINESS.address}</span>
               </li>
               <li className="flex items-center gap-2.5 text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-mint" />
@@ -227,7 +229,7 @@ export function Footer() {
 
         {/* ---- Bottom bar ---- */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-hair pt-6 text-xs text-faint sm:flex-row">
-          <p>© {new Date().getFullYear()} {BUSINESS.nameArabic} — {BUSINESS.nameLatin}. جميع الحقوق محفوظة.</p>
+          <p>{footerCms?.copyright || `© ${new Date().getFullYear()} ${BUSINESS.nameArabic} — ${BUSINESS.nameLatin}. جميع الحقوق محفوظة.`}</p>
           <div className="flex items-center gap-4">
             <PolicyLink onClick={() => setPolicy("privacy")} label="سياسة الخصوصية" />
             <span className="text-foreground/15">•</span>

@@ -19,11 +19,14 @@
 import { useMockDB, startBootstrap } from "@/lib/store/db-store";
 import type {
   Category,
+  DiscountCode,
+  HardwareUpgradeRate,
   MaintenanceRecord,
   OrderRecord,
   PCBuild,
   Product,
   ProductFilter,
+  SiteContent,
   StoreSettings,
 } from "@/types";
 
@@ -144,7 +147,8 @@ export interface OrderRepository {
     customerName: string;
     customerPhone: string;
     notes?: string;
-    items: { productId: string; qty: number }[];
+    couponCode?: string;
+    items: { productId: string; qty: number; selectedRam?: string; selectedStorage?: string }[];
   }): Promise<OrderRecord>;
   update(id: string, patch: Partial<OrderRecord>): Promise<void>;
   remove(id: string): Promise<void>;
@@ -160,6 +164,44 @@ export interface MaintenanceRepository {
 export interface SettingsRepository {
   get(): Promise<StoreSettings>;
   update(patch: Partial<StoreSettings>): Promise<void>;
+}
+
+export interface HardwarePricingRepository {
+  list(): Promise<HardwareUpgradeRate[]>;
+  create(input: Omit<HardwareUpgradeRate, "id" | "createdAt" | "updatedAt">): Promise<HardwareUpgradeRate>;
+  update(id: string, patch: Partial<HardwareUpgradeRate>): Promise<HardwareUpgradeRate>;
+  remove(id: string): Promise<void>;
+}
+
+export interface ContentRepository {
+  get(): Promise<SiteContent | null>;
+  update(data: Record<string, any>): Promise<SiteContent>;
+}
+
+export interface CouponsRepository {
+  list(): Promise<DiscountCode[]>;
+  create(input: {
+    code: string;
+    discountType: "percentage" | "fixed_amount";
+    discountValue: number;
+    minOrderAmount?: number | null;
+    maxDiscountAmount?: number | null;
+    usageLimit?: number | null;
+    expiresAt?: string | null;
+    isActive?: boolean;
+  }): Promise<DiscountCode>;
+  update(id: string, patch: Partial<DiscountCode>): Promise<DiscountCode>;
+  remove(id: string): Promise<void>;
+  validate(code: string, cartSubtotal: number): Promise<{
+    valid: boolean;
+    code: string;
+    discountType: "percentage" | "fixed_amount";
+    discountValue: number;
+    discountAmount: number;
+    subtotal: number;
+    finalTotal: number;
+    message: string;
+  }>;
 }
 
 /* ---------------------- API-backed implementations --------------------- */
@@ -313,6 +355,69 @@ const apiSettingsRepository: SettingsRepository = {
   },
 };
 
+const apiHardwarePricingRepository: HardwarePricingRepository = {
+  async list() {
+    await startBootstrap().catch(() => undefined);
+    return useMockDB.getState().hardwareUpgradeRates;
+  },
+  async create(input) {
+    const { rate } = await post<{ rate: HardwareUpgradeRate }>("/api/admin/hardware-pricing", input);
+    useMockDB.getState().addHardwareUpgradeRate(rate);
+    return rate;
+  },
+  async update(id, patchBody) {
+    const { rate } = await put<{ rate: HardwareUpgradeRate }>(`/api/admin/hardware-pricing/${id}`, patchBody);
+    useMockDB.getState().updateHardwareUpgradeRate(id, rate);
+    return rate;
+  },
+  async remove(id) {
+    await del(`/api/admin/hardware-pricing/${id}`);
+    useMockDB.getState().removeHardwareUpgradeRate(id);
+  },
+};
+
+const apiContentRepository: ContentRepository = {
+  async get() {
+    await startBootstrap().catch(() => undefined);
+    return useMockDB.getState().siteContent;
+  },
+  async update(data) {
+    const res = await put<{ content: SiteContent }>("/api/admin/content", { data });
+    useMockDB.getState().updateSiteContent(res.content.data);
+    return res.content;
+  },
+};
+
+const apiCouponsRepository: CouponsRepository = {
+  async list() {
+    const { coupons } = await api<{ coupons: DiscountCode[] }>("/api/admin/coupons");
+    return coupons;
+  },
+  async create(input) {
+    const { coupon } = await post<{ coupon: DiscountCode }>("/api/admin/coupons", input);
+    return coupon;
+  },
+  async update(id, patchBody) {
+    const { coupon } = await put<{ coupon: DiscountCode }>(`/api/admin/coupons/${id}`, patchBody);
+    return coupon;
+  },
+  async remove(id) {
+    await del(`/api/admin/coupons/${id}`);
+  },
+  async validate(code, cartSubtotal) {
+    return await post<{
+      valid: boolean;
+      code: string;
+      discountType: "percentage" | "fixed_amount";
+      discountValue: number;
+      discountAmount: number;
+      subtotal: number;
+      finalTotal: number;
+      message: string;
+    }>("/api/coupons/validate", { code, cartSubtotal });
+  },
+};
+
 /* --------------------------- Active repos ----------------------------- */
 
 export const repositories = {
@@ -322,4 +427,7 @@ export const repositories = {
   orders: apiOrderRepository,
   maintenance: apiMaintenanceRepository,
   settings: apiSettingsRepository,
+  hardwarePricing: apiHardwarePricingRepository,
+  content: apiContentRepository,
+  coupons: apiCouponsRepository,
 };

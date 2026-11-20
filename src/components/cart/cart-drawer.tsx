@@ -42,7 +42,10 @@ export function CartDrawer() {
     [items, products]
   );
 
-  const subtotal = rows.reduce((acc, r) => acc + r.product.price * r.qty, 0);
+  const getEffectivePrice = (r: (typeof rows)[number]) =>
+    r.unitPrice ?? (r.product.price + (r.ramUpgradePrice ?? 0) + (r.storageUpgradePrice ?? 0));
+
+  const subtotal = rows.reduce((acc, r) => acc + getEffectivePrice(r) * r.qty, 0);
 
   /* Animate rows on mount of the list */
   const listRef = useRef<HTMLDivElement>(null);
@@ -77,9 +80,12 @@ export function CartDrawer() {
         ) : (
           <>
             <div ref={listRef} className="flex-1 overflow-y-auto px-5 py-4" role="list" aria-label="منتجات السلة">
-              {rows.map((r) => (
+              {rows.map((r) => {
+                const unitPrice = getEffectivePrice(r);
+                const rowKey = `${r.productId}-${r.selectedRam || "base"}-${r.selectedStorage || "base"}`;
+                return (
                 <div
-                  key={r.productId}
+                  key={rowKey}
                   data-cart-row
                   role="listitem"
                   className="group relative flex gap-3.5 border-b border-hair py-4 last:border-0"
@@ -109,6 +115,20 @@ export function CartDrawer() {
                     >
                       {r.product.name}
                     </button>
+                    {(r.selectedRam || r.selectedStorage) && (
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px]">
+                        {r.selectedRam && (
+                          <span className="rounded bg-brand-blue/15 px-1.5 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                            {r.selectedRam}
+                          </span>
+                        )}
+                        {r.selectedStorage && (
+                          <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                            {r.selectedStorage}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {r.product.brand}
                     </p>
@@ -116,32 +136,33 @@ export function CartDrawer() {
                     <div className="mt-auto flex items-center justify-between pt-2">
                       {/* Quantity stepper */}
                       <div className="flex items-center rounded-full border border-hair bg-elevated">
-                        <QtyButton onClick={() => setQty(r.productId, r.qty - 1)} label="تقليل الكمية">
+                        <QtyButton onClick={() => setQty(r.productId, r.qty - 1, r.selectedRam, r.selectedStorage)} label="تقليل الكمية">
                           <Minus className="h-3.5 w-3.5" />
                         </QtyButton>
                         <span className="w-8 text-center font-tech text-sm font-bold tabular-nums">
                           {r.qty}
                         </span>
-                        <QtyButton onClick={() => setQty(r.productId, r.qty + 1)} label="زيادة الكمية">
+                        <QtyButton onClick={() => setQty(r.productId, r.qty + 1, r.selectedRam, r.selectedStorage)} label="زيادة الكمية">
                           <Plus className="h-3.5 w-3.5" />
                         </QtyButton>
                       </div>
 
                       <span className="font-tech text-sm font-bold text-foreground">
-                        <AnimatedNumber value={r.product.price * r.qty} format={(n) => formatPrice(n)} className="tabular-nums" />
+                        <AnimatedNumber value={unitPrice * r.qty} format={(n) => formatPrice(n)} className="tabular-nums" />
                       </span>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => remove(r.productId)}
+                    onClick={() => remove(r.productId, r.selectedRam, r.selectedStorage)}
                     className="absolute left-0 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-faint opacity-0 transition-all hover:bg-danger/10 hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                     aria-label={`إزالة ${r.product.name} من السلة`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-              ))}
+              );
+            })}
             </div>
 
             {/* Summary */}

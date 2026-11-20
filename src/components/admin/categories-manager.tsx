@@ -2,25 +2,50 @@
 
 /**
  * ============================================================
- * HYPER TECH — Admin Categories Manager
+ * HYPER TECH — Admin Categories / Worlds Manager
  * ============================================================
- * Category cards with live product counts, accent swatches and
- * ordering arrows. NO hardcoded category names — everything is
- * read from the store (dynamic categories mandate).
+ * Full dynamic CRUD control for Store Categories & Worlds:
+ * - Create, Read, Update, Reorder, Enable/Disable, Delete.
+ * - Editable fields: Name, Tagline, Description, Image, Icon
+ *   (with Lucide icon picker + custom input), Accent Color
+ *   (native picker, hex code input, curated presets), Display Order,
+ *   and Active/Visibility toggle.
  * ============================================================
  */
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
+  Briefcase,
+  Check,
   ChevronDown,
   ChevronUp,
+  Coins,
+  Cpu,
+  Flame,
   FolderTree,
+  Gamepad2,
+  HardDrive,
+  Headphones,
+  Keyboard,
+  Laptop,
+  Layers,
   Loader2,
+  MemoryStick,
+  Monitor,
+  Mouse,
+  Package,
   Palette,
   Pencil,
   Plus,
+  Rocket,
+  Server,
+  ShieldCheck,
+  Sparkles,
   Trash2,
+  Trophy,
+  Zap,
+  type LucideIcon,
 } from "lucide-react";
 import { useMockDB } from "@/lib/store/db-store";
 import { repositories } from "@/lib/repositories";
@@ -52,7 +77,66 @@ import {
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types";
 
-/* ------------------------------- Form model ------------------------------- */
+/* --------------------------- Lucide Icon Helpers -------------------------- */
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  Cpu,
+  Gamepad2,
+  Coins,
+  Laptop,
+  Briefcase,
+  Sparkles,
+  Zap,
+  Monitor,
+  Server,
+  HardDrive,
+  MemoryStick,
+  Keyboard,
+  Mouse,
+  Headphones,
+  ShieldCheck,
+  Layers,
+  Flame,
+  Trophy,
+  Rocket,
+  Package,
+};
+
+const POPULAR_ICONS: { name: string; label: string }[] = [
+  { name: "Cpu", label: "معالج" },
+  { name: "Gamepad2", label: "ألعاب" },
+  { name: "Coins", label: "اقتصادي" },
+  { name: "Briefcase", label: "أعمال" },
+  { name: "Laptop", label: "لابتوب" },
+  { name: "Sparkles", label: "مميز" },
+  { name: "Zap", label: "أداء فائق" },
+  { name: "Monitor", label: "شاشات" },
+  { name: "Server", label: "سيرفر" },
+  { name: "HardDrive", label: "تخزين" },
+  { name: "MemoryStick", label: "رامات" },
+  { name: "Keyboard", label: "كيبورد" },
+  { name: "Mouse", label: "ماوس" },
+  { name: "Headphones", label: "سماعات" },
+  { name: "ShieldCheck", label: "حماية" },
+  { name: "Layers", label: "طبقات" },
+];
+
+const PRESET_COLORS = [
+  { hex: "#0284c7", label: "أزرق وورك ستيشن" },
+  { hex: "#10b981", label: "أخضر جيمنج" },
+  { hex: "#f59e0b", label: "ذهبي اقتصادي" },
+  { hex: "#8b5cf6", label: "بنفسجي سايبر" },
+  { hex: "#ec4899", label: "وردي نيون" },
+  { hex: "#ef4444", label: "أحمر توربو" },
+  { hex: "#06b6d4", label: "سماوي تقني" },
+  { hex: "#64748b", label: "رمادي معدني" },
+];
+
+function resolveIcon(name: string): LucideIcon {
+  return ICON_MAP[name] ?? Package;
+}
+
+/* ------------------------------- Form Model ------------------------------- */
 
 interface CategoryForm {
   name: string;
@@ -62,19 +146,20 @@ interface CategoryForm {
   icon: string;
   image: string;
   order: string;
+  active: boolean;
 }
 
 const EMPTY_FORM: CategoryForm = {
   name: "",
   tagline: "",
   description: "",
-  accent: "#1a5ca6",
-  icon: "",
+  accent: "#0284c7",
+  icon: "Cpu",
   image: "",
   order: "",
+  active: true,
 };
 
-/** Local slug generator (mirrors the repository's approach). */
 function slugify(text: string): string {
   const base = text
     .trim()
@@ -133,10 +218,11 @@ export default function CategoriesManager() {
       name: c.name,
       tagline: c.tagline,
       description: c.description,
-      accent: c.accent,
-      icon: c.icon,
-      image: c.image,
+      accent: c.accent || "#0284c7",
+      icon: c.icon || "Package",
+      image: c.image || "",
       order: String(c.order),
+      active: c.active !== false,
     });
     setAttempted(false);
     setDialogOpen(true);
@@ -154,6 +240,10 @@ export default function CategoriesManager() {
     }
     setPending(true);
     try {
+      const orderVal = form.order.trim()
+        ? Math.max(0, Math.floor(Number(form.order) || 0))
+        : undefined;
+
       if (editing) {
         await repositories.categories.update(editing.id, {
           name: form.name.trim(),
@@ -162,9 +252,10 @@ export default function CategoriesManager() {
           accent: form.accent,
           icon: form.icon.trim() || "Package",
           image: form.image.trim(),
-          order: Math.max(0, Math.floor(Number(form.order || "0") || 0)),
+          order: orderVal ?? editing.order,
+          active: form.active,
         });
-        toast.success("تم تحديث الفئة");
+        toast.success("تم تحديث الفئة بنجاح");
       } else {
         const maxOrder = categories.reduce((m, c) => Math.max(m, c.order), -1);
         await repositories.categories.create({
@@ -178,15 +269,14 @@ export default function CategoriesManager() {
             slugify(form.name),
             categories.map((c) => c.slug),
           ),
-          order: form.order.trim()
-            ? Math.max(0, Math.floor(Number(form.order) || 0))
-            : maxOrder + 1,
+          order: orderVal ?? maxOrder + 1,
+          active: form.active,
         });
-        toast.success("تمت إضافة الفئة");
+        toast.success("تمت إضافة الفئة بنجاح");
       }
       setDialogOpen(false);
     } catch {
-      toast.error("حدث خطأ غير متوقع — جرّب تاني");
+      toast.error("حدث خطأ أثناء حفظ الفئة — يرجى المحاولة مرة أخرى");
     } finally {
       setPending(false);
     }
@@ -199,6 +289,7 @@ export default function CategoriesManager() {
     setReorderPending(id);
     try {
       await repositories.categories.reorder(id, dir);
+      toast.success("تم تحديث ترتيب العرض");
     } catch {
       toast.error("تعذر تحديث الترتيب");
     } finally {
@@ -206,8 +297,6 @@ export default function CategoriesManager() {
     }
   };
 
-  /* Storefront visibility toggle — hidden categories disappear from
-     the homepage sections + category bar, but keep their products. */
   const toggleActive = async (c: Category, next: boolean) => {
     if (visibilityPendingId) return;
     setVisibilityPendingId(c.id);
@@ -215,8 +304,8 @@ export default function CategoriesManager() {
       await repositories.categories.update(c.id, { active: next });
       toast.success(
         next
-          ? `«${c.name}» ظاهرة في المتجر الآن`
-          : `«${c.name}» اتحجبت من المتجر`,
+          ? `«${c.name}» مفعلة وظاهرة في المتجر`
+          : `«${c.name}» معطلة ومخفية من المتجر`,
       );
     } catch {
       toast.error("تعذر تحديث ظهور الفئة");
@@ -239,6 +328,8 @@ export default function CategoriesManager() {
     }
   };
 
+  const SelectedIcon = resolveIcon(form.icon);
+
   /* --------------------------------- Render -------------------------------- */
 
   return (
@@ -246,15 +337,15 @@ export default function CategoriesManager() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl font-bold">الفئات</h2>
+          <h2 className="font-display text-2xl font-bold">الفئات وعوالم المتجر</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            <span className="font-tech">{categories.length}</span> فئة — الترتيب هنا هو ترتيب
-            ظهورها في المتجر
+            <span className="font-tech">{categories.length}</span> فئات وعوالم تفاعلية —
+            الترتيب هنا يحدد تسلسل الظهور في بوابة العوالم والمتجر.
           </p>
         </div>
         <Button onClick={openCreate} className="min-h-9 glow-accent-sm">
           <Plus className="h-4 w-4" aria-hidden />
-          إضافة فئة
+          إضافة فئة / عالم جديد
         </Button>
       </div>
 
@@ -262,20 +353,30 @@ export default function CategoriesManager() {
       {sorted.length === 0 ? (
         <EmptyState
           icon={FolderTree}
-          title="لا توجد فئات"
-          hint="أضف أول فئة ليبدأ تنظيم الكتالوج."
+          title="لا توجد فئات حاليًا"
+          hint="أضف فئتك الأولى أو عالمك الرقمي لتبدأ تنظيم منتجات المتجر."
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {sorted.map((c, idx) => {
             const count = productCounts.get(c.id) ?? 0;
             const busy = reorderPending === c.id;
+            const CardIcon = resolveIcon(c.icon);
+            const isPrimaryWorld = ["workstation", "gaming", "economic"].includes(c.slug);
+
             return (
               <article
                 key={c.id}
-                className="group overflow-hidden rounded-2xl border border-hair bg-surface/60 transition-colors hover:border-primary/25"
+                className="group relative overflow-hidden rounded-2xl border border-hair bg-surface/60 transition-all duration-300 hover:border-primary/30 hover:shadow-lg"
               >
-                <div className="relative h-28 overflow-hidden bg-elevated">
+                {/* Accent top stripe */}
+                <div
+                  className="h-1.5 w-full"
+                  style={{ backgroundColor: c.accent || "#0284c7" }}
+                  aria-hidden
+                />
+
+                <div className="relative h-32 overflow-hidden bg-elevated">
                   {c.image ? (
                     <img
                       src={c.image}
@@ -284,71 +385,112 @@ export default function CategoriesManager() {
                       className="img-grade h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <span className="flex h-full items-center justify-center text-faint">
-                      <FolderTree className="h-8 w-8" aria-hidden />
-                    </span>
+                    <div className="flex h-full items-center justify-center bg-muted/20 text-faint">
+                      <FolderTree className="h-10 w-10 opacity-40" aria-hidden />
+                    </div>
                   )}
-                  <span className="absolute bottom-2 right-2 inline-flex items-center gap-1.5 rounded-full bg-[#24221d]/55 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: c.accent }}
-                      aria-hidden
-                    />
-                    {c.name}
-                  </span>
-                  {c.active === false ? (
-                    <span className="absolute left-2 top-2 rounded-full bg-[#24221d]/55 px-2.5 py-1 text-[0.65rem] font-bold text-white backdrop-blur">
-                      مخفية
-                    </span>
-                  ) : null}
-                </div>
 
-                <div className="space-y-3 p-4">
-                  <div>
-                    <h3 className="text-base font-bold">{c.name}</h3>
-                    <p className="font-tech text-xs text-faint" dir="ltr">
-                      /{c.slug}
-                    </p>
-                    <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{c.tagline}</p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+                  {/* Icon & Title Overlay */}
+                  <div className="absolute bottom-2.5 right-3 flex items-center gap-2">
+                    <span
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/20 backdrop-blur-md shadow"
+                      style={{
+                        backgroundColor: `${c.accent}33`,
+                        color: c.accent || "#fff",
+                      }}
+                    >
+                      <CardIcon className="h-4 w-4" />
+                    </span>
+                    <span className="font-display text-sm font-bold text-white drop-shadow">
+                      {c.name}
+                    </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>
-                      <span className="font-tech font-bold text-foreground">{count}</span> منتج
-                      تابع
+                  {/* Badges on top */}
+                  <div className="absolute left-3 top-3 flex items-center gap-1.5">
+                    {isPrimaryWorld && (
+                      <span className="rounded-full bg-primary/90 px-2.5 py-0.5 text-[0.65rem] font-bold text-primary-foreground backdrop-blur shadow">
+                        عالم رئيسي
+                      </span>
+                    )}
+                    {c.active === false && (
+                      <span className="rounded-full bg-danger/80 px-2 py-0.5 text-[0.65rem] font-bold text-white backdrop-blur shadow">
+                        معطلة
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Order indicator */}
+                  <span className="absolute right-3 top-3 rounded-md bg-black/60 px-2 py-0.5 font-tech text-[0.68rem] text-white/80 backdrop-blur">
+                    #{c.order + 1}
+                  </span>
+                </div>
+
+                <div className="space-y-3.5 p-4">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-display text-base font-bold">{c.name}</h3>
+                      <span className="font-tech text-xs text-faint" dir="ltr">
+                        /{c.slug}
+                      </span>
+                    </div>
+                    {c.tagline && (
+                      <p className="mt-1 line-clamp-1 text-xs font-medium text-foreground/80">
+                        {c.tagline}
+                      </p>
+                    )}
+                    {c.description && (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground leading-relaxed">
+                        {c.description}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Meta stats */}
+                  <div className="flex items-center justify-between rounded-xl bg-raised/40 px-3 py-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Package className="h-3.5 w-3.5 text-faint" />
+                      <span>
+                        <strong className="font-tech text-foreground">{count}</strong> منتج نشط
+                      </span>
                     </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      لون التمييز
+                    <span className="inline-flex items-center gap-1.5 font-tech">
                       <span
-                        className="h-3.5 w-3.5 rounded-md border border-foreground/20"
+                        className="h-3 w-3 rounded-full border border-black/10 shadow-sm"
                         style={{ backgroundColor: c.accent }}
                         aria-hidden
                       />
+                      <span className="text-[0.7rem] text-faint" dir="ltr">
+                        {c.accent}
+                      </span>
                     </span>
                   </div>
 
-                  {/* Storefront visibility */}
+                  {/* Storefront active toggle */}
                   <div className="flex items-center justify-between gap-3 rounded-xl border border-hair bg-raised/60 px-3 py-2.5">
-                    <span className="min-w-0">
-                      <Label htmlFor={`cat-active-${c.id}`} className="text-xs font-medium">
-                        {c.active !== false ? "ظاهرة في المتجر" : "مخفية"}
+                    <div className="min-w-0">
+                      <Label htmlFor={`cat-active-${c.id}`} className="text-xs font-semibold">
+                        {c.active !== false ? "مفعلة في المتجر" : "معطلة ومخفية"}
                       </Label>
-                      <span className="mt-0.5 block text-[0.65rem] leading-4 text-faint">
+                      <span className="block text-[0.65rem] text-faint">
                         {c.active !== false
-                          ? "ظاهرة في أقسام الرئيسية وشريط الفئات"
-                          : "مش ظاهرة في المتجر — منتجاتها لسه موجودة"}
+                          ? "ظاهرة في بوابة العوالم والفلاتر"
+                          : "محجوبة من التصفح — منتجاتها محفوظة"}
                       </span>
-                    </span>
+                    </div>
                     <Switch
                       id={`cat-active-${c.id}`}
                       checked={c.active !== false}
                       disabled={visibilityPendingId === c.id}
                       onCheckedChange={(next) => toggleActive(c, next)}
-                      aria-label={`ظهور فئة ${c.name} في المتجر`}
-                      className="h-6 w-11 data-[state=unchecked]:bg-muted"
+                      aria-label={`تفعيل فئة ${c.name}`}
+                      className="data-[state=checked]:bg-emerald-600"
                     />
                   </div>
 
+                  {/* Actions footer */}
                   <div className="flex items-center justify-between border-t border-hair pt-3">
                     <div className="flex items-center gap-1">
                       <button
@@ -356,7 +498,7 @@ export default function CategoriesManager() {
                         onClick={() => reorder(c.id, "up")}
                         disabled={idx === 0 || busy}
                         aria-label={`تقديم فئة ${c.name} في الترتيب`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground disabled:opacity-30"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground disabled:opacity-30"
                       >
                         <ChevronUp className="h-4 w-4" aria-hidden />
                       </button>
@@ -365,31 +507,33 @@ export default function CategoriesManager() {
                         onClick={() => reorder(c.id, "down")}
                         disabled={idx === sorted.length - 1 || busy}
                         aria-label={`تأخير فئة ${c.name} في الترتيب`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground disabled:opacity-30"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground disabled:opacity-30"
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden />
                       </button>
-                      {busy ? (
-                        <Loader2 className="mx-1 h-4 w-4 animate-spin text-primary" aria-hidden />
-                      ) : null}
+                      {busy && (
+                        <Loader2 className="mx-1 h-3.5 w-3.5 animate-spin text-primary" aria-hidden />
+                      )}
                     </div>
+
                     <div className="flex items-center gap-1">
-                      <button
-                        type="button"
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => openEdit(c)}
-                        aria-label={`تعديل فئة ${c.name}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+                        className="h-8 gap-1.5 px-2.5 text-xs text-muted-foreground hover:text-foreground"
                       >
-                        <Pencil className="h-4 w-4" aria-hidden />
-                      </button>
-                      <button
-                        type="button"
+                        <Pencil className="h-3.5 w-3.5" aria-hidden />
+                        تعديل
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setDeleteTarget(c)}
-                        aria-label={`حذف فئة ${c.name}`}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-danger/80 transition-colors hover:bg-danger/10 hover:text-danger"
+                        className="h-8 gap-1.5 px-2 text-xs text-danger/80 hover:bg-danger/10 hover:text-danger"
                       >
-                        <Trash2 className="h-4 w-4" aria-hidden />
-                      </button>
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -407,118 +551,212 @@ export default function CategoriesManager() {
           if (!o) setAttempted(false);
         }}
       >
-        <DialogContent className="max-w-lg gap-0 overflow-hidden p-0">
+        <DialogContent className="max-w-xl gap-0 overflow-hidden p-0">
           <DialogHeader className="space-y-1 border-b border-hair px-6 py-4 text-right">
-            <DialogTitle>{editing ? "تعديل الفئة" : "إضافة فئة جديدة"}</DialogTitle>
+            <DialogTitle>
+              {editing ? `تعديل فئة «${editing.name}»` : "إضافة فئة / عالم جديد"}
+            </DialogTitle>
             <DialogDescription>
-              الفئات هي عالم المتجر — لكل فئة لونها وصورتها وأيقونتها.
+              تتحكم في الاسم، الهوية البصرية، الأيقونة، ترتيب الظهور، والحالة في المتجر.
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="h-[58vh]">
-            <div className="space-y-5 px-6 py-5">
+          <ScrollArea className="max-h-[68vh]">
+            <div className="space-y-6 px-6 py-5">
+              {/* Basic Info */}
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="c-name">اسم الفئة *</Label>
+                  <Label htmlFor="c-name">اسم الفئة / العالم *</Label>
                   <Input
                     id="c-name"
                     value={form.name}
                     onChange={(e) => setField("name", e.target.value)}
-                    placeholder="مثال: لابتوب"
+                    placeholder="مثال: ورك ستيشن، جيمنج، اقتصادي..."
                   />
                   <FieldError>{attempted ? nameError : undefined}</FieldError>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="c-tagline">الوصف المختصر</Label>
+                  <Label htmlFor="c-tagline">الوصف المختصر (Tagline)</Label>
                   <Input
                     id="c-tagline"
                     value={form.tagline}
                     onChange={(e) => setField("tagline", e.target.value)}
-                    placeholder="سطر قصير يظهر تحت اسم الفئة"
+                    placeholder="مثال: قوة وإنتاجية فائقة للأعمال والريندر"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="c-desc">الوصف</Label>
+                  <Label htmlFor="c-desc">الوصف التفصيلي</Label>
                   <Textarea
                     id="c-desc"
                     rows={3}
                     value={form.description}
                     onChange={(e) => setField("description", e.target.value)}
-                    placeholder="وصف الفئة كما يظهر في صفحتها بالمتجر…"
+                    placeholder="وصف الفئة كما يظهر في كارت العالم وبوابة المتجر..."
                   />
                 </div>
               </div>
 
-              <FormSectionTitle icon={Palette}>الهوية البصرية</FormSectionTitle>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="c-accent">لون التمييز</Label>
-                  <div className="flex items-center gap-3">
+              {/* Visual Identity */}
+              <FormSectionTitle icon={Palette}>الهوية البصرية واللون</FormSectionTitle>
+              <div className="space-y-4">
+                {/* Accent Color */}
+                <div className="space-y-2">
+                  <Label htmlFor="c-accent">لون التمييز (Accent Color)</Label>
+                  <div className="flex flex-wrap items-center gap-3">
                     <input
                       id="c-accent"
                       type="color"
                       value={form.accent}
                       onChange={(e) => setField("accent", e.target.value)}
-                      aria-label="اختيار لون تمييز الفئة"
-                      className="h-10 w-16 cursor-pointer rounded-lg border border-hair bg-transparent p-1"
+                      aria-label="اختيار لون التمييز"
+                      className="h-10 w-14 cursor-pointer rounded-lg border border-hair bg-transparent p-1 shadow-sm"
+                    />
+                    <Input
+                      value={form.accent}
+                      onChange={(e) => setField("accent", e.target.value)}
+                      placeholder="#0284c7"
+                      className="w-32 font-tech text-xs uppercase"
+                      dir="ltr"
                     />
                     <span
-                      className="h-6 w-10 rounded-md border border-foreground/20"
+                      className="h-9 w-9 rounded-xl border border-foreground/15 shadow-sm"
                       style={{ backgroundColor: form.accent }}
                       aria-hidden
                     />
-                    <span className="font-tech text-xs text-muted-foreground" dir="ltr">
-                      {form.accent}
-                    </span>
+                  </div>
+
+                  {/* Preset Swatches */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {PRESET_COLORS.map((preset) => (
+                      <button
+                        key={preset.hex}
+                        type="button"
+                        onClick={() => setField("accent", preset.hex)}
+                        title={preset.label}
+                        className={cn(
+                          "flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[0.7rem] transition-all",
+                          form.accent.toLowerCase() === preset.hex.toLowerCase()
+                            ? "border-primary bg-primary/10 font-bold text-foreground"
+                            : "border-hair bg-surface/50 text-muted-foreground hover:border-foreground/30",
+                        )}
+                      >
+                        <span
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: preset.hex }}
+                        />
+                        <span>{preset.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="c-icon">اسم الأيقونة</Label>
+                {/* Lucide Icon Picker */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="c-icon">أيقونة الفئة (Lucide Icon)</Label>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>المعاينة:</span>
+                      <span
+                        className="flex h-6 w-6 items-center justify-center rounded-md border"
+                        style={{
+                          backgroundColor: `${form.accent}20`,
+                          color: form.accent,
+                          borderColor: `${form.accent}40`,
+                        }}
+                      >
+                        <SelectedIcon className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                  </div>
+
                   <Input
                     id="c-icon"
                     value={form.icon}
                     onChange={(e) => setField("icon", e.target.value)}
-                    placeholder="Laptop"
+                    placeholder="Cpu, Gamepad2, Coins..."
                     dir="ltr"
                     className="font-tech text-sm"
                   />
-                  <p className="text-[0.68rem] text-faint">
-                    اسم أيقونة Lucide مثل Laptop — بيفضل فارغًا بنستخدم أيقونة افتراضية.
-                  </p>
+
+                  {/* Quick Icon Chips */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {POPULAR_ICONS.map((ico) => {
+                      const IcoComp = resolveIcon(ico.name);
+                      const isSelected = form.icon.toLowerCase() === ico.name.toLowerCase();
+                      return (
+                        <button
+                          key={ico.name}
+                          type="button"
+                          onClick={() => setField("icon", ico.name)}
+                          className={cn(
+                            "flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition-all",
+                            isSelected
+                              ? "border-primary bg-primary/15 font-bold text-primary"
+                              : "border-hair bg-surface/60 text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                          )}
+                        >
+                          <IcoComp className="h-3 w-3" />
+                          <span>{ico.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="space-y-1.5 sm:col-span-2">
+                {/* Cover Image */}
+                <div className="space-y-1.5">
                   <ImageUpload
                     folder="hypertech/categories"
                     aspect="cover"
                     max={1}
                     value={form.image.trim() ? [form.image.trim()] : []}
                     onChange={(images) => setField("image", images[0] ?? "")}
-                    label="صورة الغلاف"
+                    label="صورة الغلاف والعالم"
                   />
                   <p className="text-[0.68rem] text-faint">
-                    صورة عريضة للفئة — اسحبها وافلتها للرفع المباشر أو الصق رابط.
+                    صورة عريضة عالية الجودة لخلفية كارت العالم في البوابة وصفحة الفئة.
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="c-order">الترتيب</Label>
-                  <Input
-                    id="c-order"
-                    type="number"
-                    min={0}
-                    dir="ltr"
-                    className="font-tech"
-                    value={form.order}
-                    onChange={(e) => setField("order", e.target.value)}
-                    placeholder="تلقائي"
-                  />
-                  <p className="text-[0.68rem] text-faint">
-                    الأصغر يظهر أولًا — بيتحدد تلقائيًا لو فاضي.
-                  </p>
+                {/* Display Order & Active State */}
+                <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="c-order">ترتيب الظهور</Label>
+                    <Input
+                      id="c-order"
+                      type="number"
+                      min={0}
+                      dir="ltr"
+                      className="font-tech"
+                      value={form.order}
+                      onChange={(e) => setField("order", e.target.value)}
+                      placeholder="0 (الأول)"
+                    />
+                    <p className="text-[0.68rem] text-faint">
+                      الرقم الأصغر يظهر أولاً في عوالم المتجر.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col justify-end">
+                    <div className="flex items-center justify-between rounded-xl border border-hair bg-raised/60 p-3">
+                      <div>
+                        <Label htmlFor="dialog-cat-active" className="text-xs font-semibold">
+                          الحالة في المتجر
+                        </Label>
+                        <span className="block text-[0.65rem] text-faint">
+                          {form.active ? "مفعلة وتظهر للمستخدمين" : "معطلة ومخفية"}
+                        </span>
+                      </div>
+                      <Switch
+                        id="dialog-cat-active"
+                        checked={form.active}
+                        onCheckedChange={(next) => setField("active", next)}
+                        className="data-[state=checked]:bg-emerald-600"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -532,7 +770,7 @@ export default function CategoriesManager() {
               {pending ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
               ) : (
-                <Plus className="h-4 w-4" aria-hidden />
+                <Check className="h-4 w-4" aria-hidden />
               )}
               {editing ? "حفظ التعديلات" : "إضافة الفئة"}
             </Button>
@@ -546,8 +784,8 @@ export default function CategoriesManager() {
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle>حذف الفئة؟</AlertDialogTitle>
             <AlertDialogDescription>
-              المنتجات التابعة لن تُحذف — ستبقى بدون فئة. حذف فئة «{deleteTarget?.name}» نهائي
-              ولا يمكن التراجع.
+              المنتجات التابعة لن تُحذف وستبقى بدون فئة في الكتالوج. حذف فئة «{deleteTarget?.name}» نهائي
+              ولا يمكن التراجع عنه.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -557,7 +795,7 @@ export default function CategoriesManager() {
                 e.preventDefault();
                 confirmDelete();
               }}
-              className={cn("bg-danger text-white hover:bg-danger/90")}
+              className="bg-danger text-white hover:bg-danger/90"
             >
               {deleting ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

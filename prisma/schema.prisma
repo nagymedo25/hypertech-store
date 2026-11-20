@@ -16,11 +16,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/* ------------------------- Security ------------------------- */
+/**
+ * ------------------------- Security -------------------------
+ */
 
 model AdminUser {
   id           String    @id @default(cuid())
   username     String    @unique
+  email        String?   @unique
   passwordHash String
   role         String    @default("admin")
   createdAt    DateTime  @default(now())
@@ -28,35 +31,55 @@ model AdminUser {
   lastLoginAt  DateTime?
 }
 
-/* ------------------------- Catalog ------------------------- */
+/**
+ * ------------------------- Catalog -------------------------
+ */
 
 model Product {
-  id               String   @id @default(cuid())
-  slug             String   @unique
-  name             String
-  brand            String
-  shortDescription String
-  description      String
-  price            Float
-  oldPrice         Float?
-  promotionalLabel String?
-  categoryId       String
-  /** JSON: string[] of image URLs (Cloudinary or absolute) */
-  images           Json     @default("[]")
-  /** in-stock | low-stock | out-of-stock | pre-order */
-  availability     String   @default("in-stock")
-  stockQty         Int      @default(0)
-  featured         Boolean  @default(false)
-  isNew            Boolean  @default(false)
-  rating           Float    @default(0)
-  /** JSON: SpecItem[] { label, value } */
-  specs            Json     @default("[]")
-  /** device | component | accessory */
-  specLayout       String   @default("device")
-  /** Admin-controlled: eligible for the storefront hero showcase */
-  heroEligible     Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  slug                  String   @unique
+  name                  String
+  brand                 String
+  shortDescription      String
+  description           String
+  price                 Float
+  oldPrice              Float?
+  promotionalLabel      String?
+  categoryId            String
+  /**
+   * JSON: string[] of image URLs (Cloudinary or absolute)
+   */
+  images                Json     @default("[]")
+  /**
+   * in-stock | low-stock | out-of-stock | pre-order
+   */
+  availability          String   @default("in-stock")
+  stockQty              Int      @default(0)
+  featured              Boolean  @default(false)
+  isNew                 Boolean  @default(false)
+  rating                Float    @default(0)
+  /**
+   * JSON: SpecItem[] { label, value }
+   */
+  specs                 Json     @default("[]")
+  /**
+   * device | component | accessory
+   */
+  specLayout            String   @default("device")
+  /**
+   * Admin-controlled: eligible for the storefront hero showcase
+   */
+  heroEligible          Boolean  @default(true)
+  baseRam               String?
+  baseStorage           String?
+  allowRamUpgrade       Boolean  @default(false)
+  allowStorageUpgrade   Boolean  @default(false)
+  /**
+   * JSON: CustomHardwarePricing overrides
+   */
+  customHardwarePricing Json?    @default("{}")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([categoryId])
   @@index([brand])
@@ -84,37 +107,53 @@ model PCBuild {
   id           String   @id @default(cuid())
   slug         String   @unique
   title        String
-  /** gaming | workstation | budget | creator */
+  /**
+   * gaming | workstation | budget | creator
+   */
   type         String   @default("gaming")
   description  String
-  /** JSON: string[] image URLs */
+  /**
+   * JSON: string[] image URLs
+   */
   images       Json     @default("[]")
-  /** JSON: BuildComponent[] { id, role, name, spec?, qty, price? } */
+  /**
+   * JSON: BuildComponent[] { id, role, name, spec?, qty, price? }
+   */
   components   Json     @default("[]")
   totalPrice   Float    @default(0)
   availability String   @default("in-stock")
-  /** JSON: PerformanceBadge[] { label, score } */
+  /**
+   * JSON: PerformanceBadge[] { label, score }
+   */
   performance  Json     @default("[]")
   featured     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
-/* ------------------------ Commerce ------------------------- */
+/**
+ * ------------------------ Commerce -------------------------
+ */
 
 model OrderRecord {
-  id            String   @id @default(cuid())
-  ref           String   @unique
-  customerName  String
-  customerPhone String
-  /** JSON: OrderLine[] { productId, name, qty, price } */
-  items         Json
-  total         Float
-  /** new | contacted | confirmed | completed | cancelled */
-  status        String   @default("new")
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  ref            String   @unique
+  customerName   String
+  customerPhone  String
+  /**
+   * JSON: OrderLine[] { productId, name, qty, price }
+   */
+  items          Json
+  total          Float
+  couponCode     String?
+  discountAmount Float?   @default(0)
+  /**
+   * new | contacted | confirmed | completed | cancelled
+   */
+  status         String   @default("new")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([status])
   @@index([createdAt])
@@ -125,15 +164,21 @@ model MaintenanceRecord {
   ref                String   @unique
   customerName       String
   customerPhone      String
-  /** laptop | desktop | phone | other */
-  deviceType        String
+  /**
+   * laptop | desktop | phone | other
+   */
+  deviceType         String
   deviceBrand        String?
   deviceModel        String?
-  /** hardware | software | performance | os | display | other */
+  /**
+   * hardware | software | performance | os | display | other
+   */
   problemCategory    String
   problemDescription String
   additionalNotes    String?
-  /** new | in-review | repairing | ready | delivered | cancelled */
+  /**
+   * new | in-review | repairing | ready | delivered | cancelled
+   */
   status             String   @default("new")
   adminNotes         String?
   createdAt          DateTime @default(now())
@@ -144,21 +189,23 @@ model MaintenanceRecord {
 }
 
 model StoreSettings {
-  id                 String   @id @default("singleton")
-  storeName          String
-  tagline            String
-  whatsappNumber     String
-  whatsappDisplay    String
-  facebookUrl        String
-  tiktokUrl          String
-  address            String
+  id                  String   @id @default("singleton")
+  storeName           String
+  tagline             String
+  whatsappNumber      String
+  whatsappDisplay     String
+  facebookUrl         String
+  tiktokUrl           String
+  address             String
   businessDescription String
-  logoUrl            String?
-  showBuildsCategory Boolean  @default(true)
-  updatedAt          DateTime @updatedAt
+  logoUrl             String?
+  showBuildsCategory  Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
 }
 
-/* ------------------- Backup / Audit system ------------------- */
+/**
+ * ------------------- Backup / Audit system -------------------
+ */
 
 model BackupRecord {
   id           String   @id @default(cuid())
@@ -168,7 +215,9 @@ model BackupRecord {
   builds       Int      @default(0)
   orders       Int      @default(0)
   maintenance  Int      @default(0)
-  /** pending | success | failed */
+  /**
+   * pending | success | failed
+   */
   status       String   @default("pending")
   fileUrl      String?
   fileName     String?
@@ -179,13 +228,70 @@ model BackupRecord {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  /** login | login_failed | logout | backup_created | reset_executed | crud actions... */
+  /**
+   * login | login_failed | logout | backup_created | reset_executed | crud actions...
+   */
   action    String
   actor     String?
-  /** JSON: contextual details */
+  /**
+   * JSON: contextual details
+   */
   details   Json?
   createdAt DateTime @default(now())
 
   @@index([createdAt])
   @@index([action])
+}
+
+/**
+ * ----------------- Hardware Upgrades & Promotions -----------------
+ */
+
+model HardwareUpgradeRate {
+  id            String   @id @default(cuid())
+  /**
+   * 'ram' | 'storage'
+   */
+  componentType String
+  label         String
+  capacityGb    Int?
+  priceDelta    Float
+  order         Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([componentType])
+  @@index([order])
+}
+
+model DiscountCode {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  /**
+   * 'percentage' | 'fixed_amount'
+   */
+  discountType      String
+  discountValue     Float
+  minOrderAmount    Float?
+  maxDiscountAmount Float?
+  usageLimit        Int?
+  usedCount         Int       @default(0)
+  expiresAt         DateTime?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+}
+
+/**
+ * ------------------- CMS & Dynamic Site Content -------------------
+ */
+
+model SiteContent {
+  id        String   @id @default("singleton")
+  data      Json     @default("{}")
+  updatedAt DateTime @updatedAt
 }

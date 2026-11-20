@@ -4,6 +4,7 @@
  * ============================================================
  */
 
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { badRequest, json, readJson, serverError, unauthorized } from "@/lib/server/http";
 import { requireAdmin } from "@/lib/server/auth";
@@ -56,6 +57,13 @@ export async function POST(req: Request) {
         specs: input.specs,
         specLayout: input.specLayout,
         heroEligible: input.heroEligible,
+        baseRam: input.baseRam ?? null,
+        baseStorage: input.baseStorage ?? null,
+        allowRamUpgrade: input.allowRamUpgrade ?? false,
+        allowStorageUpgrade: input.allowStorageUpgrade ?? false,
+        customHardwarePricing: input.customHardwarePricing
+          ? (input.customHardwarePricing as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
       },
     });
 

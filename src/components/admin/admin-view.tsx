@@ -26,6 +26,9 @@ import OrdersManager from "./orders-manager";
 import MaintenanceManager from "./maintenance-manager";
 import SettingsManager from "./settings-manager";
 import BackupCenter from "./backup-center";
+import HardwarePricingManager from "./hardware-pricing-manager";
+import CouponsManager from "./coupons-manager";
+import ContentManager from "./content-manager";
 
 type SessionState = "checking" | "authed" | "anon";
 
@@ -145,6 +148,9 @@ export default function AdminView({ section }: { section: AdminSection }) {
       {section === "builds" && <BuildsManager />}
       {section === "orders" && <OrdersManager />}
       {section === "maintenance" && <MaintenanceManager />}
+      {section === "hardware-pricing" && <HardwarePricingManager />}
+      {section === "coupons" && <CouponsManager />}
+      {section === "content" && <ContentManager />}
       {section === "data" && <BackupCenter />}
       {section === "settings" && <SettingsManager />}
     </AdminShell>

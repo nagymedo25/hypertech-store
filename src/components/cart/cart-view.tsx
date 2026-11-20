@@ -42,7 +42,10 @@ export default function CartView() {
     [items, products]
   );
 
-  const subtotal = rows.reduce((acc, r) => acc + r.product.price * r.qty, 0);
+  const getEffectivePrice = (r: (typeof rows)[number]) =>
+    r.unitPrice ?? (r.product.price + (r.ramUpgradePrice ?? 0) + (r.storageUpgradePrice ?? 0));
+
+  const subtotal = rows.reduce((acc, r) => acc + getEffectivePrice(r) * r.qty, 0);
   const count = rows.reduce((acc, r) => acc + r.qty, 0);
 
   /* Rows entrance */
@@ -100,9 +103,12 @@ export default function CartView() {
         <div className="grid grid-cols-1 gap-8 pb-24 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
           {/* Items */}
           <div ref={listRef} className="space-y-4" role="list" aria-label="منتجات السلة">
-            {rows.map((r) => (
+            {rows.map((r) => {
+              const unitPrice = getEffectivePrice(r);
+              const rowKey = `${r.productId}-${r.selectedRam || "base"}-${r.selectedStorage || "base"}`;
+              return (
               <article
-                key={r.productId}
+                key={rowKey}
                 data-cart-page-row
                 role="listitem"
                 className="group flex flex-col gap-4 rounded-3xl border border-hair bg-elevated p-4 shadow-card transition-colors hover:border-foreground/15 min-[480px]:flex-row min-[480px]:items-center sm:gap-6 sm:p-5"
@@ -127,8 +133,22 @@ export default function CartView() {
                     >
                       {r.product.name}
                     </button>
+                    {(r.selectedRam || r.selectedStorage) && (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                        {r.selectedRam && (
+                          <span className="rounded bg-brand-blue/15 px-1.5 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                            الرام: {r.selectedRam}
+                          </span>
+                        )}
+                        {r.selectedStorage && (
+                          <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                            التخزين: {r.selectedStorage}
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {r.product.brand} • {formatPrice(r.product.price)}
+                      {r.product.brand} • {formatPrice(unitPrice)}
                     </p>
                   </div>
                 </div>
@@ -140,8 +160,22 @@ export default function CartView() {
                   >
                     {r.product.name}
                   </button>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {r.product.brand} • سعر الوحدة: {formatPrice(r.product.price)}
+                  {(r.selectedRam || r.selectedStorage) && (
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                      {r.selectedRam && (
+                        <span className="rounded bg-brand-blue/15 px-2 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                          الرام: {r.selectedRam}
+                        </span>
+                      )}
+                      {r.selectedStorage && (
+                        <span className="rounded bg-brand-cyan/15 px-2 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                          التخزين: {r.selectedStorage}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {r.product.brand} • سعر الوحدة: {formatPrice(unitPrice)}
                   </p>
                 </div>
 
@@ -149,7 +183,7 @@ export default function CartView() {
                   {/* Stepper */}
                   <div className="flex items-center rounded-full border border-hair bg-elevated">
                     <button
-                      onClick={() => setQty(r.productId, r.qty - 1)}
+                      onClick={() => setQty(r.productId, r.qty - 1, r.selectedRam, r.selectedStorage)}
                       className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-all hover:text-primary active:scale-90"
                       aria-label="تقليل الكمية"
                     >
@@ -157,7 +191,7 @@ export default function CartView() {
                     </button>
                     <span className="w-10 text-center font-tech text-base font-bold tabular-nums">{r.qty}</span>
                     <button
-                      onClick={() => setQty(r.productId, r.qty + 1)}
+                      onClick={() => setQty(r.productId, r.qty + 1, r.selectedRam, r.selectedStorage)}
                       className="flex h-10 w-10 items-center justify-center text-muted-foreground transition-all hover:text-primary active:scale-90"
                       aria-label="زيادة الكمية"
                     >
@@ -166,13 +200,13 @@ export default function CartView() {
                   </div>
 
                   <span className="font-tech text-lg font-bold text-foreground" dir="rtl">
-                    <AnimatedNumber value={r.product.price * r.qty} format={(n) => formatPriceCompact(n)} />
+                    <AnimatedNumber value={unitPrice * r.qty} format={(n) => formatPriceCompact(n)} />
                     <span className="mr-1.5 text-xs font-medium text-muted-foreground">ج.م</span>
                   </span>
 
                   <button
                     onClick={() => {
-                      remove(r.productId);
+                      remove(r.productId, r.selectedRam, r.selectedStorage);
                       toast.info(`تم إزالة «${r.product.name}» من السلة`);
                     }}
                     className="flex h-9 w-9 items-center justify-center rounded-xl text-faint transition-all hover:bg-danger/10 hover:text-danger sm:opacity-0 sm:group-hover:opacity-100"
@@ -182,7 +216,8 @@ export default function CartView() {
                   </button>
                 </div>
               </article>
-            ))}
+              );
+            })}
 
             <div className="flex items-center justify-between pt-2">
               <button

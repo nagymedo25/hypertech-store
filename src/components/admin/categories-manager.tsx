@@ -551,7 +551,7 @@ export default function CategoriesManager() {
           if (!o) setAttempted(false);
         }}
       >
-        <DialogContent className="max-w-xl gap-0 overflow-hidden p-0">
+        <DialogContent className="max-w-xl gap-0 overflow-hidden p-0 bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
           <DialogHeader className="space-y-1 border-b border-hair px-6 py-4 text-right">
             <DialogTitle>
               {editing ? `تعديل فئة «${editing.name}»` : "إضافة فئة / عالم جديد"}
@@ -780,7 +780,7 @@ export default function CategoriesManager() {
 
       {/* --------------------------- Delete confirmation --------------------------- */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle>حذف الفئة؟</AlertDialogTitle>
             <AlertDialogDescription>

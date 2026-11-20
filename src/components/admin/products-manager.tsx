@@ -600,7 +600,7 @@ export default function ProductsManager() {
           if (!o) setAttempted(false);
         }}
       >
-        <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0">
+        <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0 bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
           <DialogHeader className="space-y-1 border-b border-hair px-6 py-4 text-right">
             <DialogTitle>{editing ? "تعديل منتج" : "إضافة منتج جديد"}</DialogTitle>
             <DialogDescription>
@@ -801,10 +801,10 @@ export default function ProductsManager() {
 
                 {/* Toggles */}
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="flex items-center justify-between gap-3 rounded-lg border border-hair bg-panel/70 p-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-hair bg-surface p-3">
                     <div className="space-y-0.5">
                       <Label htmlFor="p-allow-ram" className="text-sm font-medium flex items-center gap-1.5">
-                        <Cpu className="h-4 w-4 text-brand-blue" />
+                        <Cpu className="h-4 w-4 text-primary" />
                         تفعيل ترقية الرام (RAM)
                       </Label>
                       <p className="text-[10px] text-faint">إتاحة خيارات زيادة الرام بالمتجر</p>
@@ -816,10 +816,10 @@ export default function ProductsManager() {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 rounded-lg border border-hair bg-panel/70 p-3">
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-hair bg-surface p-3">
                     <div className="space-y-0.5">
                       <Label htmlFor="p-allow-storage" className="text-sm font-medium flex items-center gap-1.5">
-                        <HardDrive className="h-4 w-4 text-brand-cyan" />
+                        <HardDrive className="h-4 w-4 text-primary" />
                         تفعيل ترقية التخزين (SSD)
                       </Label>
                       <p className="text-[10px] text-faint">إتاحة خيارات زيادة الـ SSD بالمتجر</p>
@@ -866,7 +866,7 @@ export default function ProductsManager() {
                     {/* Custom Pricing Overrides */}
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                        <SlidersHorizontal className="h-3.5 w-3.5 text-brand-blue" />
+                        <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
                         تخصيص أسعار الترقية لهذا المنتج (اختياري)
                       </Label>
                       <p className="text-[11px] text-muted-foreground">
@@ -876,7 +876,7 @@ export default function ProductsManager() {
                       <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                         {form.allowRamUpgrade && (
                           <div className="space-y-1.5">
-                            <span className="text-[11px] font-bold text-brand-blue">خيارات الرام (RAM):</span>
+                            <span className="text-[11px] font-bold text-primary">خيارات الرام (RAM):</span>
                             {hardwareUpgradeRates
                               .filter((r) => r.componentType === "ram" && r.active)
                               .map((rate) => {
@@ -884,7 +884,7 @@ export default function ProductsManager() {
                                 return (
                                   <div
                                     key={rate.id}
-                                    className="flex items-center justify-between gap-2 rounded-lg border border-hair bg-panel/50 px-3 py-1.5 text-xs"
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-hair bg-surface px-3 py-1.5 text-xs"
                                   >
                                     <span className="font-tech font-medium">{rate.label}</span>
                                     <div className="flex items-center gap-2">
@@ -909,7 +909,7 @@ export default function ProductsManager() {
 
                         {form.allowStorageUpgrade && (
                           <div className="space-y-1.5 pt-2">
-                            <span className="text-[11px] font-bold text-brand-cyan">خيارات التخزين (SSD):</span>
+                            <span className="text-[11px] font-bold text-foreground">خيارات التخزين (SSD):</span>
                             {hardwareUpgradeRates
                               .filter((r) => r.componentType === "storage" && r.active)
                               .map((rate) => {
@@ -917,7 +917,7 @@ export default function ProductsManager() {
                                 return (
                                   <div
                                     key={rate.id}
-                                    className="flex items-center justify-between gap-2 rounded-lg border border-hair bg-panel/50 px-3 py-1.5 text-xs"
+                                    className="flex items-center justify-between gap-2 rounded-lg border border-hair bg-surface px-3 py-1.5 text-xs"
                                   >
                                     <span className="font-tech font-medium">{rate.label}</span>
                                     <div className="flex items-center gap-2">
@@ -1043,7 +1043,7 @@ export default function ProductsManager() {
 
       {/* --------------------------- Delete confirmation --------------------------- */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle>حذف المنتج؟</AlertDialogTitle>
             <AlertDialogDescription>

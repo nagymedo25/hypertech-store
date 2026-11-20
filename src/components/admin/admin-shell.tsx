@@ -98,7 +98,7 @@ export default function AdminShell({
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden md:mr-16 lg:mr-64">
+    <div className="min-h-screen w-full md:pr-16 lg:pr-64">
       {/* Desktop sidebar (right side — RTL) */}
       <aside
         className="fixed inset-y-0 right-0 z-40 hidden w-16 flex-col border-l border-hair bg-surface md:flex lg:w-64"
@@ -259,40 +259,10 @@ export default function AdminShell({
               </Button>
             </div>
           </div>
-
-          {/* Mobile sections tab bar (scrollable with >= 44px touch targets) */}
-          <nav
-            className="w-full max-w-full overflow-x-auto border-t border-hair/60 md:hidden scrollbar-none"
-            aria-label="أقسام لوحة التحكم"
-          >
-            <ul className="flex min-w-max gap-1.5 px-3 py-2">
-              {SECTIONS.map((s) => {
-                const active = s.id === section;
-                return (
-                  <li key={s.id} className="shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => go(s.id)}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "flex min-h-[44px] items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-xs font-medium transition-colors touch-manipulation",
-                        active
-                          ? "border-primary/40 bg-primary/15 text-primary font-bold shadow-sm"
-                          : "border-hair text-muted-foreground hover:text-foreground active:bg-foreground/[0.05]",
-                      )}
-                    >
-                      <s.icon className="h-4 w-4 shrink-0" aria-hidden />
-                      {s.label}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
         </header>
 
         {/* Panel content */}
-        <main className="mx-auto w-full max-w-6xl flex-1 px-3 sm:px-6 py-6 pb-24 md:pb-8 overflow-x-hidden">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 sm:px-6 py-6 pb-24 md:pb-10">
           {children}
         </main>
       </div>

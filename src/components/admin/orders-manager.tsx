@@ -193,12 +193,12 @@ export default function OrdersManager() {
           {(it.selectedRam || it.selectedStorage) && (
             <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[11px]">
               {it.selectedRam && (
-                <span className="rounded bg-brand-blue/15 px-1.5 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                <span className="rounded-md bg-primary/10 px-2 py-0.5 font-tech text-xs font-semibold text-primary border border-primary/20">
                   الرام: {it.selectedRam}
                 </span>
               )}
               {it.selectedStorage && (
-                <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                <span className="rounded-md bg-foreground/5 px-2 py-0.5 font-tech text-xs font-semibold text-foreground/80 border border-hair">
                   التخزين: {it.selectedStorage}
                 </span>
               )}
@@ -213,15 +213,11 @@ export default function OrdersManager() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-3">
-        <div>
-          <h2 className="font-display text-2xl font-bold">الطلبات</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            <span className="font-tech">{orders.length}</span> طلب — غيّر الحالة من القائمة
-            الملونة بجانب كل طلب
-          </p>
-        </div>
-        <AdminHint>طلبات تجريبية للعرض — التخزين الحقيقي في المرحلة الثانية.</AdminHint>
+      <div>
+        <h2 className="font-display text-2xl font-bold">الطلبات</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          <span className="font-tech">{orders.length}</span> طلب مسجل في النظام
+        </p>
       </div>
 
       {/* Filters */}
@@ -373,7 +369,7 @@ export default function OrdersManager() {
         open={!!deleteTarget}
         onOpenChange={(o) => !o && setDeleteTarget(null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle>حذف الطلب؟</AlertDialogTitle>
             <AlertDialogDescription>

@@ -342,7 +342,7 @@ export default function MaintenanceManager() {
 
       {/* --------------------------- Delete confirmation --------------------------- */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle>حذف طلب الصيانة؟</AlertDialogTitle>
             <AlertDialogDescription>

@@ -1894,7 +1894,7 @@ export default function BackupCenter() {
           if (!o) setPhrase("");
         }}
       >
-        <AlertDialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-lg">
+        <AlertDialogContent dir="rtl" className="max-h-[90vh] overflow-y-auto rounded-2xl sm:max-w-lg bg-elevated text-foreground border border-hair shadow-2xl">
           <AlertDialogHeader className="text-right sm:text-right">
             <AlertDialogTitle className="flex items-center gap-2 font-display text-lg">
               <ShieldAlert className="h-5 w-5 shrink-0 text-danger" aria-hidden />

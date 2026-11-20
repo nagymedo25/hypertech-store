@@ -4,11 +4,10 @@
  * ============================================================
  * HYPER TECH — Admin Promo & Discount Codes Manager
  * ============================================================
- * Full CRUD for discount coupons:
- * - Code, Type (percentage / fixed_amount), Value
- * - Conditions: min order amount, max discount cap, usage limit
- * - Expiration date & status
- * - Quick active toggle, copy code, edit, delete
+ * Clean, organized, responsive discount code management:
+ * - Table view on desktop & clean cards on mobile
+ * - Quick copy, active status toggle, edit & delete
+ * - Solid, high-contrast create/edit modal
  * ============================================================
  */
 
@@ -20,14 +19,8 @@ import {
   Trash2,
   Copy,
   Check,
-  Calendar,
-  Layers,
   Percent,
   Coins,
-  AlertCircle,
-  Clock,
-  CheckCircle2,
-  XCircle,
   Loader2,
   Search,
 } from "lucide-react";
@@ -61,7 +54,7 @@ import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DiscountCode, DiscountType } from "@/types";
 
-interface CouponFormState {
+interface CouponFormData {
   code: string;
   discountType: DiscountType;
   discountValue: string;
@@ -72,7 +65,7 @@ interface CouponFormState {
   isActive: boolean;
 }
 
-const EMPTY_FORM: CouponFormState = {
+const EMPTY_FORM: CouponFormData = {
   code: "",
   discountType: "percentage",
   discountValue: "",
@@ -83,7 +76,7 @@ const EMPTY_FORM: CouponFormState = {
   isActive: true,
 };
 
-export default function CouponsManager() {
+export function CouponsManager() {
   const [coupons, setCoupons] = useState<DiscountCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -91,7 +84,7 @@ export default function CouponsManager() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<CouponFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<CouponFormData>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [attempted, setAttempted] = useState(false);
 
@@ -99,36 +92,35 @@ export default function CouponsManager() {
   const [couponToDelete, setCouponToDelete] = useState<DiscountCode | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  const loadCoupons = async () => {
-    setLoading(true);
-    try {
-      const data = await repositories.coupons.list();
-      setCoupons(data);
-    } catch (err: any) {
-      toast.error("فشل تحميل كوبونات الخصم", {
-        description: err?.message || "حدث خطأ أثناء الاتصال بالخادم.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadCoupons();
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const list = await repositories.coupons.list();
+        if (alive) setCoupons(list);
+      } catch {
+        if (alive) toast.error("تعذر تحميل كوبونات الخصم");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const filteredCoupons = useMemo(() => {
-    return coupons.filter((c) => {
-      const matchSearch =
-        search.trim() === "" ||
-        c.code.toLowerCase().includes(search.trim().toLowerCase());
-      if (!matchSearch) return false;
+    let list = coupons;
+    if (filterType === "active") list = list.filter((c) => c.isActive);
+    else if (filterType === "inactive") list = list.filter((c) => !c.isActive);
 
-      if (filterType === "active") return c.isActive;
-      if (filterType === "inactive") return !c.isActive;
-      return true;
-    });
-  }, [coupons, search, filterType]);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((c) => c.code.toLowerCase().includes(q));
+    }
+    return list;
+  }, [coupons, filterType, search]);
 
   const handleOpenAdd = () => {
     setEditingId(null);
@@ -139,6 +131,12 @@ export default function CouponsManager() {
 
   const handleOpenEdit = (c: DiscountCode) => {
     setEditingId(c.id);
+    let expFormatted = "";
+    if (c.expiresAt) {
+      try {
+        expFormatted = new Date(c.expiresAt).toISOString().split("T")[0];
+      } catch {}
+    }
     setForm({
       code: c.code,
       discountType: c.discountType,
@@ -146,7 +144,7 @@ export default function CouponsManager() {
       minOrderAmount: c.minOrderAmount ? String(c.minOrderAmount) : "",
       maxDiscountAmount: c.maxDiscountAmount ? String(c.maxDiscountAmount) : "",
       usageLimit: c.usageLimit ? String(c.usageLimit) : "",
-      expiresAt: c.expiresAt ? c.expiresAt.slice(0, 10) : "",
+      expiresAt: expFormatted,
       isActive: c.isActive,
     });
     setAttempted(false);
@@ -162,7 +160,6 @@ export default function CouponsManager() {
 
   const handleToggleActive = async (c: DiscountCode) => {
     const nextState = !c.isActive;
-    // optimistic update
     setCoupons((prev) =>
       prev.map((item) => (item.id === c.id ? { ...item, isActive: nextState } : item))
     );
@@ -171,12 +168,11 @@ export default function CouponsManager() {
       toast.success(
         nextState ? `تم تفعيل الكوبون "${c.code}"` : `تم إيقاف الكوبون "${c.code}"`
       );
-    } catch (err: any) {
-      // rollback
+    } catch {
       setCoupons((prev) =>
         prev.map((item) => (item.id === c.id ? { ...item, isActive: c.isActive } : item))
       );
-      toast.error("فشل تحديث حالة الكوبون", { description: err?.message });
+      toast.error("فشل تحديث حالة الكوبون");
     }
   };
 
@@ -241,8 +237,8 @@ export default function CouponsManager() {
       await repositories.coupons.remove(couponToDelete.id);
       setCoupons((prev) => prev.filter((item) => item.id !== couponToDelete.id));
       toast.success(`تم حذف الكوبون "${couponToDelete.code}"`);
-    } catch (err: any) {
-      toast.error("فشل حذف الكوبون", { description: err?.message });
+    } catch {
+      toast.error("فشل حذف الكوبون");
     } finally {
       setDeleteDialogOpen(false);
       setCouponToDelete(null);
@@ -250,26 +246,29 @@ export default function CouponsManager() {
   };
 
   return (
-    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
-      {/* Header */}
+    <div className="space-y-6 w-full max-w-full">
+      {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="font-display text-2xl font-bold tracking-tight">كوبونات الخصم</h2>
-            <Badge variant="outline" className="border-primary/30 text-primary font-tech">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              <Tag className="h-6 w-6 text-primary" />
+              كوبونات الخصم
+            </h1>
+            <span className="rounded-full bg-primary/10 border border-primary/25 px-2.5 py-0.5 text-xs font-bold text-primary font-tech">
               {coupons.length}
-            </Badge>
+            </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            إنشاء وإدارة أكواد الخصم الترويجية والشروط ومرات الاستخدام
+            إنشاء وإدارة أكواد الخصم وشروط التطبيق والصلاحية ونسب التخفيض للمتجر.
           </p>
         </div>
 
         <Button
           onClick={handleOpenAdd}
-          className="glow-accent-sm inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground self-start sm:self-auto"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md rounded-xl h-11 px-5 self-start sm:self-auto"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="ml-1.5 h-4 w-4" />
           إضافة كوبون جديد
         </Button>
       </div>
@@ -277,28 +276,28 @@ export default function CouponsManager() {
       {/* Filter / Search Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-faint" />
+          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="بحث بكود الخصم…"
-            className="pr-9 rounded-xl border-hair bg-elevated text-xs"
+            className="pr-10 rounded-xl border-hair bg-elevated text-xs h-10 font-tech"
           />
         </div>
 
         <div className="flex items-center gap-1.5 rounded-xl border border-hair bg-elevated p-1 text-xs">
           {[
             { id: "all", label: "الكل" },
-            { id: "active", label: "المفعلة فقط" },
+            { id: "active", label: "المفعلة" },
             { id: "inactive", label: "المتوقفة" },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setFilterType(tab.id as any)}
               className={cn(
-                "rounded-lg px-3 py-1.5 font-bold transition-all",
+                "rounded-lg px-3.5 py-1.5 font-bold transition-all",
                 filterType === tab.id
-                  ? "bg-primary text-primary-foreground shadow-sm"
+                  ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -308,7 +307,7 @@ export default function CouponsManager() {
         </div>
       </div>
 
-      {/* Coupons List */}
+      {/* Main Content Area */}
       {loading ? (
         <div className="flex items-center justify-center p-12 text-muted-foreground">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -317,41 +316,217 @@ export default function CouponsManager() {
       ) : filteredCoupons.length === 0 ? (
         <EmptyState
           icon={Tag}
-          title={search ? "لا توجد نتائج تطابق بحثك" : "لا توجد كوبونات خصم حاليًا"}
-          hint={
-            search
-              ? "جرّب البحث بكلمة أو كود آخر."
-              : "اضغط على زر 'إضافة كوبون جديد' لإنشاء أول كود خصم لمتجرك."
+          title={search ? "لا توجد نتائج تطابق بحثك" : "لا توجد كوبونات خصم حالياً"}
+          hint="أضف أول كود خصم لتشجيع العملاء ومكافأتهم عند إتمام الطلب."
+          action={
+            <Button onClick={handleOpenAdd} size="sm" className="gap-1.5 font-bold">
+              <Plus className="h-4 w-4" />
+              إضافة أول كوبون
+            </Button>
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCoupons.map((coupon) => {
-            const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < new Date();
-            const isExhausted =
-              coupon.usageLimit !== null &&
-              coupon.usageLimit !== undefined &&
-              coupon.usedCount >= coupon.usageLimit;
+        <div className="space-y-4">
+          {/* Desktop Table View */}
+          <div className="hidden sm:block w-full overflow-x-auto rounded-2xl border border-hair bg-elevated shadow-card">
+            <table className="w-full text-right text-sm">
+              <thead>
+                <tr className="border-b border-hair bg-surface text-muted-foreground text-xs font-bold">
+                  <th className="py-3.5 px-4">كود الخصم</th>
+                  <th className="py-3.5 px-4">نوع وقيمة الخصم</th>
+                  <th className="py-3.5 px-4">شروط الطلب</th>
+                  <th className="py-3.5 px-4">مرات الاستخدام</th>
+                  <th className="py-3.5 px-4">تاريخ الانتهاء</th>
+                  <th className="py-3.5 px-4">الحالة</th>
+                  <th className="py-3.5 px-4 text-left">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-hair">
+                {filteredCoupons.map((coupon) => {
+                  const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < new Date();
+                  const isExhausted =
+                    coupon.usageLimit !== null &&
+                    coupon.usageLimit !== undefined &&
+                    coupon.usedCount >= coupon.usageLimit;
 
-            return (
-              <div
-                key={coupon.id}
-                className={cn(
-                  "relative flex flex-col justify-between overflow-hidden rounded-[1.75rem] border border-hair bg-elevated p-5 shadow-card transition-all hover:shadow-card-lg",
-                  !coupon.isActive && "opacity-65"
-                )}
-              >
-                {/* Header card: Code & Status */}
-                <div>
-                  <div className="flex items-center justify-between gap-2">
+                  return (
+                    <tr
+                      key={coupon.id}
+                      className={cn(
+                        "transition-colors hover:bg-surface/50",
+                        !coupon.isActive && "opacity-60 bg-surface/20"
+                      )}
+                    >
+                      {/* Code */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-lg border border-hair bg-surface px-2.5 py-1 font-mono font-bold text-sm tracking-wider text-primary">
+                            {coupon.code}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(coupon.code)}
+                            className="rounded-lg p-1.5 text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
+                            title="نسخ الكود"
+                          >
+                            {copiedCode === coupon.code ? (
+                              <Check className="h-4 w-4 text-mint" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Value */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold border",
+                            coupon.discountType === "percentage"
+                              ? "bg-mint/15 text-mint border-mint/30"
+                              : "bg-primary/15 text-primary border-primary/30"
+                          )}
+                        >
+                          {coupon.discountType === "percentage" ? (
+                            <>
+                              <Percent className="h-3.5 w-3.5" />
+                              خصم {coupon.discountValue}%
+                            </>
+                          ) : (
+                            <>
+                              <Coins className="h-3.5 w-3.5" />
+                              خصم {formatPrice(coupon.discountValue)}
+                            </>
+                          )}
+                        </span>
+                      </td>
+
+                      {/* Thresholds */}
+                      <td className="py-3.5 px-4 whitespace-nowrap text-xs text-muted-foreground">
+                        {coupon.minOrderAmount ? (
+                          <div>
+                            أدنى:{" "}
+                            <span className="font-tech font-bold text-foreground">
+                              {formatPrice(coupon.minOrderAmount)}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-faint">بلا حد أدنى</span>
+                        )}
+                        {coupon.discountType === "percentage" && coupon.maxDiscountAmount ? (
+                          <div className="text-[11px] text-faint">
+                            أقصى خصم: {formatPrice(coupon.maxDiscountAmount)}
+                          </div>
+                        ) : null}
+                      </td>
+
+                      {/* Usage */}
+                      <td className="py-3.5 px-4 whitespace-nowrap text-xs font-tech font-bold text-foreground">
+                        {coupon.usedCount}{" "}
+                        {coupon.usageLimit ? (
+                          <span className="text-muted-foreground font-normal">/ {coupon.usageLimit}</span>
+                        ) : (
+                          <span className="text-faint text-[11px] font-sans font-normal">(غير محدود)</span>
+                        )}
+                      </td>
+
+                      {/* Expiration */}
+                      <td className="py-3.5 px-4 whitespace-nowrap text-xs">
+                        {coupon.expiresAt ? (
+                          <span
+                            className={cn(
+                              "font-tech",
+                              isExpired ? "text-danger font-bold" : "text-muted-foreground"
+                            )}
+                          >
+                            {new Date(coupon.expiresAt).toLocaleDateString("en-GB")}
+                            {isExpired && " (منتهي)"}
+                          </span>
+                        ) : (
+                          <span className="text-faint">دائم</span>
+                        )}
+                      </td>
+
+                      {/* Active Status */}
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={coupon.isActive}
+                            onCheckedChange={() => handleToggleActive(coupon)}
+                            disabled={Boolean(isExpired || isExhausted)}
+                          />
+                          <span className="text-xs font-medium text-muted-foreground">
+                            {isExpired
+                              ? "منتهي"
+                              : isExhausted
+                              ? "مستنفد"
+                              : coupon.isActive
+                              ? "مفعّل"
+                              : "متوقف"}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-4 whitespace-nowrap text-left">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2.5 text-xs font-bold"
+                            onClick={() => handleOpenEdit(coupon)}
+                          >
+                            <Pencil className="h-3.5 w-3.5 ml-1" />
+                            تعديل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2.5 text-xs font-bold text-danger hover:bg-danger/10 hover:text-danger"
+                            onClick={() => {
+                              setCouponToDelete(coupon);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 ml-1" />
+                            حذف
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card Layout */}
+          <div className="grid grid-cols-1 gap-3 sm:hidden">
+            {filteredCoupons.map((coupon) => {
+              const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < new Date();
+              const isExhausted =
+                coupon.usageLimit !== null &&
+                coupon.usageLimit !== undefined &&
+                coupon.usedCount >= coupon.usageLimit;
+
+              return (
+                <div
+                  key={coupon.id}
+                  className={cn(
+                    "rounded-2xl border border-hair bg-elevated p-4 shadow-card space-y-3",
+                    !coupon.isActive && "opacity-60"
+                  )}
+                >
+                  <div className="flex items-center justify-between border-b border-hair pb-2.5">
                     <div className="flex items-center gap-2">
-                      <div className="rounded-xl border border-hair bg-raised px-3 py-1.5 font-mono text-base font-extrabold tracking-wider text-primary">
+                      <span className="rounded-lg border border-hair bg-surface px-2.5 py-1 font-mono font-bold text-sm tracking-wider text-primary">
                         {coupon.code}
-                      </div>
+                      </span>
                       <button
+                        type="button"
                         onClick={() => handleCopy(coupon.code)}
-                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-raised hover:text-foreground transition-colors"
-                        title="نسخ الكود"
+                        className="rounded-lg p-1 text-muted-foreground hover:bg-surface"
                       >
                         {copiedCode === coupon.code ? (
                           <Check className="h-4 w-4 text-mint" />
@@ -361,282 +536,190 @@ export default function CouponsManager() {
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={coupon.isActive}
-                        onCheckedChange={() => handleToggleActive(coupon)}
-                        aria-label="تفعيل أو إيقاف الكوبون"
-                      />
-                    </div>
+                    <Switch
+                      checked={coupon.isActive}
+                      onCheckedChange={() => handleToggleActive(coupon)}
+                    />
                   </div>
 
-                  {/* Value badge & Description */}
-                  <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <Badge
+                  <div className="flex items-center justify-between text-xs">
+                    <span
                       className={cn(
-                        "rounded-xl px-3 py-1 text-xs font-bold",
+                        "inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold border",
                         coupon.discountType === "percentage"
                           ? "bg-mint/15 text-mint border-mint/30"
-                          : "bg-electric/15 text-electric border-electric/30"
+                          : "bg-primary/15 text-primary border-primary/30"
                       )}
                     >
-                      {coupon.discountType === "percentage" ? (
-                        <span className="flex items-center gap-1 font-tech">
-                          <Percent className="h-3 w-3" />
-                          خصم {coupon.discountValue}%
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 font-tech">
-                          <Coins className="h-3 w-3" />
-                          خصم {formatPrice(coupon.discountValue)}
-                        </span>
-                      )}
-                    </Badge>
+                      {coupon.discountType === "percentage"
+                        ? `خصم ${coupon.discountValue}%`
+                        : `خصم ${formatPrice(coupon.discountValue)}`}
+                    </span>
 
-                    {isExpired ? (
-                      <Badge variant="destructive" className="text-[0.68rem]">
-                        منتهي الصلاحية
-                      </Badge>
-                    ) : isExhausted ? (
-                      <Badge variant="secondary" className="text-[0.68rem] bg-amber/20 text-amber">
-                        مستنفد الاستخدام
-                      </Badge>
-                    ) : coupon.isActive ? (
-                      <Badge variant="outline" className="border-mint/30 text-mint text-[0.68rem]">
-                        مفعّل
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-muted-foreground text-[0.68rem]">
-                        متوقف
-                      </Badge>
-                    )}
+                    <span className="font-tech text-xs text-muted-foreground">
+                      استُخدم {coupon.usedCount}{" "}
+                      {coupon.usageLimit ? `/ ${coupon.usageLimit}` : "مرة"}
+                    </span>
                   </div>
 
-                  {/* Conditions details */}
-                  <div className="mt-4 space-y-2 border-t border-hair pt-3 text-xs text-muted-foreground">
-                    {coupon.minOrderAmount ? (
-                      <div className="flex items-center justify-between">
-                        <span>الحد الأدنى للطلب:</span>
-                        <span className="font-tech font-bold text-foreground">
-                          {formatPrice(coupon.minOrderAmount)}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between text-faint">
-                        <span>الحد الأدنى للطلب:</span>
-                        <span>بلا حد أدنى</span>
-                      </div>
-                    )}
+                  <div className="flex items-center justify-between pt-2 border-t border-hair text-xs">
+                    <span className="text-muted-foreground font-tech">
+                      {coupon.expiresAt
+                        ? `ينتهي: ${new Date(coupon.expiresAt).toLocaleDateString("en-GB")}`
+                        : "كود دائم"}
+                    </span>
 
-                    {coupon.discountType === "percentage" && coupon.maxDiscountAmount ? (
-                      <div className="flex items-center justify-between">
-                        <span>الحد الأقصى للخصم:</span>
-                        <span className="font-tech font-bold text-foreground">
-                          {formatPrice(coupon.maxDiscountAmount)}
-                        </span>
-                      </div>
-                    ) : null}
-
-                    <div className="flex items-center justify-between">
-                      <span>مرات الاستخدام:</span>
-                      <span className="font-tech font-bold text-foreground">
-                        {coupon.usedCount}{" "}
-                        {coupon.usageLimit ? `/ ${coupon.usageLimit}` : "(غير محدود)"}
-                      </span>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs font-bold"
+                        onClick={() => handleOpenEdit(coupon)}
+                      >
+                        <Pencil className="h-3.5 w-3.5 ml-1" />
+                        تعديل
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-xs font-bold text-danger hover:bg-danger/10"
+                        onClick={() => {
+                          setCouponToDelete(coupon);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 ml-1" />
+                        حذف
+                      </Button>
                     </div>
-
-                    {coupon.expiresAt ? (
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3 text-faint" />
-                          تاريخ الانتهاء:
-                        </span>
-                        <span
-                          className={cn(
-                            "font-tech font-semibold",
-                            isExpired ? "text-danger" : "text-foreground"
-                          )}
-                        >
-                          {new Date(coupon.expiresAt).toLocaleDateString("ar-EG")}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between text-faint">
-                        <span>الصلاحية:</span>
-                        <span>مفتوحة دائماً</span>
-                      </div>
-                    )}
                   </div>
                 </div>
-
-                {/* Card Footer: Edit & Delete buttons */}
-                <div className="mt-5 flex items-center justify-end gap-2 border-t border-hair pt-3">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleOpenEdit(coupon)}
-                    className="h-8 rounded-lg px-2.5 text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    <Pencil className="h-3.5 w-3.5 mr-1" />
-                    تعديل
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setCouponToDelete(coupon);
-                      setDeleteDialogOpen(true);
-                    }}
-                    className="h-8 rounded-lg px-2.5 text-xs text-danger hover:bg-danger/10 hover:text-danger"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    حذف
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* ---------------- Create / Edit Dialog ---------------- */}
+      {/* ================= Create / Edit Dialog ================= */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg border-hair bg-elevated sm:max-w-lg" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl font-bold">
+        <DialogContent className="max-w-md gap-0 overflow-hidden p-0 bg-elevated border border-hair text-right shadow-2xl rounded-2xl">
+          <DialogHeader className="border-b border-hair bg-surface px-6 py-4.5 text-right">
+            <DialogTitle className="text-lg font-bold text-foreground">
               {editingId ? "تعديل كود الخصم" : "إنشاء كود خصم جديد"}
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              حدد رمز الكود، نوع الخصم، وشروط التطبيق والصلاحية.
+            <DialogDescription className="text-xs text-muted-foreground mt-1">
+              حدد رمز الكود ونوع الخصم وشروط التطبيق والصلاحية.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <div>
-              <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                كود الخصم (Promo Code) <span className="text-danger">*</span>
+          <form onSubmit={handleSubmit} className="space-y-4 p-6">
+            {/* Promo Code Input */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-foreground">
+                كود الخصم (Promo Code) *
               </Label>
               <Input
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                placeholder="مثال: HYPER20 أو GAMING100"
-                className="font-mono text-left tracking-wider uppercase font-bold"
+                placeholder="مثال: HYPER20 أو SAVE100"
+                className="bg-surface border-hair text-foreground font-mono font-bold tracking-wider text-left uppercase rounded-xl h-11 px-3.5 focus:border-primary"
                 required
               />
-              <span className="text-[0.7rem] text-faint mt-1 block">
-                يتحول تلقائياً إلى حروف كبيرة باللغة الإنجليزية لسهولة كتابته من العميل.
-              </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                  نوع الخصم
-                </Label>
-                <div className="grid grid-cols-2 gap-1.5 rounded-xl border border-hair bg-raised p-1">
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, discountType: "percentage" })}
-                    className={cn(
-                      "rounded-lg py-2 text-xs font-bold transition-all",
-                      form.discountType === "percentage"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    نسبة مئوية %
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, discountType: "fixed_amount" })}
-                    className={cn(
-                      "rounded-lg py-2 text-xs font-bold transition-all",
-                      form.discountType === "fixed_amount"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    مبلغ ثابت (ج.م)
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                  قيمة الخصم <span className="text-danger">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    min="1"
-                    max={form.discountType === "percentage" ? "100" : undefined}
-                    step="any"
-                    value={form.discountValue}
-                    onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-                    placeholder={form.discountType === "percentage" ? "مثال: 10" : "مثال: 250"}
-                    className="font-tech text-left pl-10"
-                    required
-                  />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-                    {form.discountType === "percentage" ? "%" : "ج.م"}
-                  </span>
-                </div>
+            {/* Discount Type Toggle */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-foreground">نوع الخصم *</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className={cn(
+                    "flex h-11 items-center justify-center gap-1.5 rounded-xl border text-sm font-bold transition-all",
+                    form.discountType === "percentage"
+                      ? "border-primary bg-primary text-white shadow-sm"
+                      : "border-hair bg-surface text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setForm({ ...form, discountType: "percentage" })}
+                >
+                  <Percent className="h-4 w-4" />
+                  نسبة مئوية %
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "flex h-11 items-center justify-center gap-1.5 rounded-xl border text-sm font-bold transition-all",
+                    form.discountType === "fixed_amount"
+                      ? "border-primary bg-primary text-white shadow-sm"
+                      : "border-hair bg-surface text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setForm({ ...form, discountType: "fixed_amount" })}
+                >
+                  <Coins className="h-4 w-4" />
+                  مبلغ ثابت (ج.م)
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                  الحد الأدنى لقيمة الطلب (ج.م)
+            {/* Discount Value */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-foreground">
+                قيمة الخصم ({form.discountType === "percentage" ? "نسبة %" : "جنيه مصري"}) *
+              </Label>
+              <Input
+                type="number"
+                min="1"
+                max={form.discountType === "percentage" ? "100" : undefined}
+                step={form.discountType === "percentage" ? "1" : "50"}
+                value={form.discountValue}
+                onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
+                placeholder={form.discountType === "percentage" ? "15" : "200"}
+                dir="ltr"
+                className="bg-surface border-hair text-foreground font-tech font-bold text-left rounded-xl h-11 px-3.5 focus:border-primary"
+                required
+              />
+            </div>
+
+            {/* Conditions: Min Order & Max Discount */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-foreground">
+                  الحد الأدنى للطلب (ج.م)
                 </Label>
                 <Input
                   type="number"
                   min="0"
-                  step="any"
+                  step="100"
                   value={form.minOrderAmount}
                   onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
-                  placeholder="اختياري — مثال: 1000"
-                  className="font-tech text-left"
+                  placeholder="اختياري — 1000"
+                  dir="ltr"
+                  className="bg-surface border-hair text-foreground font-tech text-left font-bold rounded-xl h-11 px-3.5 focus:border-primary"
                 />
               </div>
 
-              {form.discountType === "percentage" ? (
-                <div>
-                  <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                    الحد الأقصى للخصم (ج.م)
-                  </Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={form.maxDiscountAmount}
-                    onChange={(e) => setForm({ ...form, maxDiscountAmount: e.target.value })}
-                    placeholder="اختياري — مثال: 500"
-                    className="font-tech text-left"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                    الحد الأقصى لمرات الاستخدام
-                  </Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={form.usageLimit}
-                    onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
-                    placeholder="اختياري — مثال: 50"
-                    className="font-tech text-left"
-                  />
-                </div>
-              )}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-foreground">
+                  أقصى حد للخصم (ج.م)
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="50"
+                  disabled={form.discountType !== "percentage"}
+                  value={form.maxDiscountAmount}
+                  onChange={(e) => setForm({ ...form, maxDiscountAmount: e.target.value })}
+                  placeholder={form.discountType === "percentage" ? "اختياري — 500" : "—"}
+                  dir="ltr"
+                  className="bg-surface border-hair text-foreground font-tech text-left font-bold rounded-xl h-11 px-3.5 focus:border-primary disabled:opacity-40"
+                />
+              </div>
             </div>
 
-            {form.discountType === "percentage" && (
-              <div>
-                <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                  الحد الأقصى لمرات الاستخدام
+            {/* Usage Limit & Expiration */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-foreground">
+                  أقصى عدد استخدامات
                 </Label>
                 <Input
                   type="number"
@@ -644,88 +727,82 @@ export default function CouponsManager() {
                   step="1"
                   value={form.usageLimit}
                   onChange={(e) => setForm({ ...form, usageLimit: e.target.value })}
-                  placeholder="اختياري — مثال: 100"
-                  className="font-tech text-left"
+                  placeholder="فارغ = غير محدود"
+                  dir="ltr"
+                  className="bg-surface border-hair text-foreground font-tech text-left font-bold rounded-xl h-11 px-3.5 focus:border-primary"
                 />
               </div>
-            )}
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <Label className="text-xs font-bold text-muted-foreground mb-1.5 block">
-                  تاريخ انتهاء الصلاحية
-                </Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-foreground">تاريخ الانتهاء</Label>
                 <Input
                   type="date"
                   value={form.expiresAt}
                   onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                  className="font-tech text-left"
-                />
-              </div>
-
-              <div className="flex items-center justify-between rounded-xl border border-hair bg-raised p-3 self-end">
-                <div>
-                  <span className="text-xs font-bold block">تفعيل الكوبون فوراً</span>
-                  <span className="text-[0.68rem] text-muted-foreground">
-                    يمكن للعملاء استخدامه الآن
-                  </span>
-                </div>
-                <Switch
-                  checked={form.isActive}
-                  onCheckedChange={(v) => setForm({ ...form, isActive: v })}
+                  dir="ltr"
+                  className="bg-surface border-hair text-foreground font-tech text-left rounded-xl h-11 px-3.5 focus:border-primary"
                 />
               </div>
             </div>
 
-            <DialogFooter className="gap-2 pt-3 sm:gap-0">
+            {/* Active Switch */}
+            <div className="flex items-center justify-between rounded-xl border border-hair bg-surface p-3.5">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-bold text-foreground">تفعيل الكوبون فوراً</Label>
+                <p className="text-xs text-muted-foreground">
+                  يمكن للعملاء استخدامه فوراً عند الشراء.
+                </p>
+              </div>
+              <Switch
+                checked={form.isActive}
+                onCheckedChange={(checked) => setForm({ ...form, isActive: checked })}
+              />
+            </div>
+
+            {/* Modal Footer */}
+            <DialogFooter className="gap-2 pt-2 border-t border-hair sm:gap-2">
               <Button
                 type="button"
                 variant="outline"
+                className="rounded-xl h-11 px-5 font-bold"
                 onClick={() => setDialogOpen(false)}
-                className="rounded-xl"
+                disabled={submitting}
               >
                 إلغاء
               </Button>
               <Button
                 type="submit"
                 disabled={submitting}
-                className="glow-accent-sm rounded-xl bg-primary text-primary-foreground font-bold"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl h-11 px-6 shadow-md"
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                    جاري الحفظ…
-                  </>
-                ) : editingId ? (
-                  "تحديث الكوبون"
-                ) : (
-                  "إنشاء الكوبون"
-                )}
+                {submitting && <Loader2 className="ml-1.5 h-4 w-4 animate-spin" />}
+                {editingId ? "حفظ التعديلات" : "إنشاء الكوبون"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* ---------------- Delete Confirmation Dialog ---------------- */}
+      {/* ================= Delete Confirmation Modal ================= */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="max-w-md border-hair bg-elevated" dir="rtl">
+        <AlertDialogContent className="bg-elevated border border-hair text-right shadow-2xl rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-lg font-bold">
+            <AlertDialogTitle className="text-foreground font-bold">
               حذف كود الخصم؟
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-xs text-muted-foreground">
-              هل أنت متأكد من حذف كود الخصم &quot;{couponToDelete?.code}&quot;؟ لن يتمكن العملاء
-              من استخدامه بعد الحذف.
+            <AlertDialogDescription className="text-muted-foreground">
+              هل أنت متأكد من حذف الكوبون{" "}
+              <strong className="text-foreground font-bold">{couponToDelete?.code}</strong>؟ لن يتمكن
+              العملاء من استخدامه مجدداً.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-0">
-            <AlertDialogCancel className="rounded-xl">إلغاء</AlertDialogCancel>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel className="rounded-xl font-bold">إلغاء</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              className="rounded-xl bg-danger text-danger-foreground hover:bg-danger/90 font-bold"
+              className="bg-danger text-white hover:bg-danger/90 rounded-xl font-bold"
             >
-              تأكيد الحذف
+              حذف نهائي
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -733,3 +810,5 @@ export default function CouponsManager() {
     </div>
   );
 }
+
+export default CouponsManager;

@@ -136,12 +136,12 @@ export default function CartView() {
                     {(r.selectedRam || r.selectedStorage) && (
                       <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
                         {r.selectedRam && (
-                          <span className="rounded bg-brand-blue/15 px-1.5 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                          <span className="rounded-md bg-primary/10 px-2 py-0.5 font-tech text-xs font-semibold text-primary border border-primary/20">
                             الرام: {r.selectedRam}
                           </span>
                         )}
                         {r.selectedStorage && (
-                          <span className="rounded bg-brand-cyan/15 px-1.5 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                          <span className="rounded-md bg-foreground/5 px-2 py-0.5 font-tech text-xs font-semibold text-foreground/80 border border-hair">
                             التخزين: {r.selectedStorage}
                           </span>
                         )}
@@ -163,12 +163,12 @@ export default function CartView() {
                   {(r.selectedRam || r.selectedStorage) && (
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
                       {r.selectedRam && (
-                        <span className="rounded bg-brand-blue/15 px-2 py-0.5 font-tech text-brand-blue border border-brand-blue/20">
+                        <span className="rounded-md bg-primary/10 px-2 py-0.5 font-tech text-xs font-semibold text-primary border border-primary/20">
                           الرام: {r.selectedRam}
                         </span>
                       )}
                       {r.selectedStorage && (
-                        <span className="rounded bg-brand-cyan/15 px-2 py-0.5 font-tech text-brand-cyan border border-brand-cyan/20">
+                        <span className="rounded-md bg-foreground/5 px-2 py-0.5 font-tech text-xs font-semibold text-foreground/80 border border-hair">
                           التخزين: {r.selectedStorage}
                         </span>
                       )}

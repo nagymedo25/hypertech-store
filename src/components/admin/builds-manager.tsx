@@ -486,7 +486,7 @@ export default function BuildsManager() {
           <DialogOverlay />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
             <DialogPrimitive.Content
-              className="pointer-events-auto flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-hair bg-elevated/95 shadow-2xl backdrop-blur-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 text-foreground"
+              className="pointer-events-auto flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-hair bg-elevated shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 text-foreground"
             >
               {/* Sticky Header */}
               <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between border-b border-hair bg-elevated/95 px-4 py-3.5 sm:px-6 sm:py-4 backdrop-blur-md">
@@ -866,7 +866,7 @@ export default function BuildsManager() {
 
       {/* --------------------------- Delete confirmation --------------------------- */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-elevated text-foreground border border-hair shadow-2xl rounded-2xl">
           <AlertDialogHeader className="text-right">
             <AlertDialogTitle>حذف التجميعة؟</AlertDialogTitle>
             <AlertDialogDescription>

@@ -469,13 +469,13 @@ export default function ProductView({ slug }: { slug: string }) {
 
             {/* ---------------- خيارات ترقية العتاد (RAM & Storage) ---------------- */}
             {(product.allowRamUpgrade || product.allowStorageUpgrade) && (
-              <div className="mt-7 space-y-4 rounded-3xl border border-hair bg-elevated/70 p-4 shadow-card sm:p-5">
+              <div className="mt-7 space-y-4 rounded-3xl border border-hair bg-surface p-4 shadow-card sm:p-5">
                 <div className="flex items-center justify-between border-b border-hair pb-3">
                   <h3 className="flex items-center gap-2 font-display text-base font-bold text-foreground">
-                    <Cpu className="h-5 w-5 text-brand-blue" />
+                    <Cpu className="h-5 w-5 text-primary" />
                     تخصيص وترقية العتاد
                   </h3>
-                  <span className="rounded-full bg-brand-blue/10 px-2.5 py-0.5 text-[11px] font-bold text-brand-blue">
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold text-primary">
                     تحديث فوري للسعر
                   </span>
                 </div>
@@ -485,10 +485,10 @@ export default function ProductView({ slug }: { slug: string }) {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-foreground flex items-center gap-1.5">
-                        <Cpu className="h-3.5 w-3.5 text-brand-blue" />
+                        <Cpu className="h-3.5 w-3.5 text-primary" />
                         سعة الذاكرة العشوائية (RAM):
                       </span>
-                      <span className="font-tech font-bold text-brand-blue">{activeRam}</span>
+                      <span className="font-tech font-bold text-primary">{activeRam}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -502,8 +502,8 @@ export default function ProductView({ slug }: { slug: string }) {
                             className={cn(
                               "flex flex-col items-start justify-center rounded-xl border p-2.5 text-right transition-all duration-200",
                               isSelected
-                                ? "border-brand-blue bg-brand-blue/15 shadow-[0_0_12px_rgba(26,92,166,0.25)] ring-1 ring-brand-blue"
-                                : "border-hair bg-surface/60 hover:border-foreground/20 hover:bg-surface"
+                                ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
+                                : "border-hair bg-elevated hover:border-foreground/20"
                             )}
                           >
                             <span className="font-tech text-xs font-bold text-foreground">{opt.label}</span>
@@ -513,7 +513,7 @@ export default function ProductView({ slug }: { slug: string }) {
                                 opt.effectiveDelta === 0
                                   ? "text-faint"
                                   : isSelected
-                                  ? "font-bold text-brand-cyan"
+                                  ? "font-bold text-primary"
                                   : "text-muted-foreground"
                               )}
                             >
@@ -531,10 +531,10 @@ export default function ProductView({ slug }: { slug: string }) {
                   <div className="space-y-2 pt-2 border-t border-hair/50">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-semibold text-foreground flex items-center gap-1.5">
-                        <HardDrive className="h-3.5 w-3.5 text-brand-cyan" />
+                        <HardDrive className="h-3.5 w-3.5 text-primary" />
                         سعة وحدة التخزين (SSD):
                       </span>
-                      <span className="font-tech font-bold text-brand-cyan">{activeStorage}</span>
+                      <span className="font-tech font-bold text-primary">{activeStorage}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -548,8 +548,8 @@ export default function ProductView({ slug }: { slug: string }) {
                             className={cn(
                               "flex flex-col items-start justify-center rounded-xl border p-2.5 text-right transition-all duration-200",
                               isSelected
-                                ? "border-brand-cyan bg-brand-cyan/15 shadow-[0_0_12px_rgba(0,217,255,0.2)] ring-1 ring-brand-cyan"
-                                : "border-hair bg-surface/60 hover:border-foreground/20 hover:bg-surface"
+                                ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary"
+                                : "border-hair bg-elevated hover:border-foreground/20"
                             )}
                           >
                             <span className="font-tech text-xs font-bold text-foreground">{opt.label}</span>
@@ -559,7 +559,7 @@ export default function ProductView({ slug }: { slug: string }) {
                                 opt.effectiveDelta === 0
                                   ? "text-faint"
                                   : isSelected
-                                  ? "font-bold text-brand-cyan"
+                                  ? "font-bold text-primary"
                                   : "text-muted-foreground"
                               )}
                             >
